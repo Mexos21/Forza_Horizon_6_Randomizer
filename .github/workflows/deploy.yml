@@ -26,8 +26,5 @@ jobs:
       - name: Build Angular App
         run: npm run build
 
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: dist/angular-starter/browser
-          branch: gh-pages
+      - name: List output directory
+        run: ls -R dist
