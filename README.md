@@ -8,7 +8,7 @@ An interactive, web-based race randomizer built for **Forza Horizon 6** using **
 
 ## 📸 Preview
 
-![App Screenshot](imagen.png)  
+![App Screenshot](image.png)  
 
 ---
 
