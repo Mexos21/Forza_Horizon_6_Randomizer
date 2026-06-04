@@ -41,6 +41,8 @@ body {
   padding: 20px;
   color: var(--text-primary);
   transition: background-color 0.3s, color 0.2s;
+  padding: 30px;      /* o 40px si quieres más espacio */
+
 }
 
 .container {
