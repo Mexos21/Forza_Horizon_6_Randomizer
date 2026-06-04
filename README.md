@@ -48,3 +48,5 @@ An interactive, web-based race randomizer built for **Forza Horizon 6** using **
 ## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+"This project is an unofficial fan-made tool and is not affiliated with, endorsed by, or sponsored by Microsoft or Turn 10 Studios. All game assets and trademarks are the property of their respective owners."
