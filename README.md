@@ -6,7 +6,7 @@ An interactive, web-based race randomizer for **Forza Horizon 6**. Break the ana
 
 ## 📸 Preview
 
-[App Screenshot – (image.png)
+![App Screenshot](image.png)
 
 ## 🚀 Features
 
