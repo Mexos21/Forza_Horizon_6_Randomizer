@@ -41,7 +41,6 @@ body {
   padding: 20px;
   color: var(--text-primary);
   transition: background-color 0.3s, color 0.2s;
-  padding: 30px;      /* o 40px si quieres más espacio */
 
 }
 
@@ -50,6 +49,7 @@ body {
   margin: 0 auto;
   background: var(--bg-primary);
   border-radius: 8px;
+  padding: 20px;
 }
 
 h2 {
