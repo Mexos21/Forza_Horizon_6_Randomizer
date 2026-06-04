@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FH6 Advanced Challenge Generator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>🎰 FH6 Advanced Challenge Generator</h2>
+    
+    <div class="dataset-status">
+      <strong>📊 Dataset Status:</strong> <span id="datasetStatus">Loading cars...</span>
+    </div>
+
+    <div class="filters-panel">
+      <h4>⚙️ Target Filter Pool (Select Multiple options)</h4>
+      <div class="filters-grid">
+        <!-- Manufacturers -->
+        <div class="filter-group">
+          <label>Manufacturers:</label>
+          <div id="manufacturersList" class="checkbox-scroll"></div>
+        </div>
+
+        <!-- Car Models -->
+        <div class="filter-group">
+          <label>Car Models:</label>
+          <div id="modelsList" class="checkbox-scroll"></div>
+        </div>
+
+        <!-- Countries -->
+        <div class="filter-group">
+          <label>Countries:</label>
+          <div id="countriesList" class="checkbox-scroll"></div>
+        </div>
+
+        <!-- Decades -->
+        <div class="filter-group">
+          <label>Decades / Eras:</label>
+          <div id="decadesList" class="checkbox-scroll"></div>
+        </div>
+
+        <!-- Car Types / Styles (ocupa ambas columnas) -->
+        <div class="filter-group full-width">
+          <label>Car Types / Styles:</label>
+          <div id="typesList" class="checkbox-scroll inline-scroll"></div>
+        </div>
+
+        <!-- Performance Classes -->
+        <div class="filter-group full-width">
+          <label>Performance Classes:</label>
+          <div id="classesList" class="inline-scroll"></div>
+        </div>
+      </div>
+    </div>
+
+    <button id="spinButton">🎯 Spin Roulette</button>
+
+    <button id="clearFiltersButton" style="background: #4a5568; margin-top: 10px;">🗑️ Clear Filter</button>
+    
+    <div class="result-box">
+      <h3>Current Challenge Target:</h3>
+      <div id="resultContent">
+        <p><strong>Selected Car:</strong> <span id="resultCar">---</span></p>
+        <p><strong>Country:</strong> <span id="resultCountry">---</span></p>
+        <p><strong>Decade:</strong> <span id="resultDecade">---</span></p>
+        <p><strong>Car Style:</strong> <span id="resultStyle">---</span></p>
+        <p><strong>Performance Class:</strong> <span id="resultClass">---</span></p>
+      </div>
+      <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <span>SELECTING MATCH...</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
