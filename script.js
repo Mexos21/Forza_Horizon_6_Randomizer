@@ -236,7 +236,7 @@ function fullRender() {
 }
 
 // -------------------------------------------------------------
-// 6. LÓGICA DE LA RULETA
+// 6. LÓGICA DE LA RULETA (modificada para coherencia)
 // -------------------------------------------------------------
 function spinRoulette() {
   let pool = [...carsDatabase];
@@ -280,10 +280,18 @@ function spinRoulette() {
     chosenClass = PERFORMANCE_CLASSES[Math.floor(Math.random() * PERFORMANCE_CLASSES.length)];
   }
 
-  const showCarModel = (selectedCarsIds.size > 0) || (Math.random() > 0.5);
-  const showCountry = (selectedCountries.size > 0) || (Math.random() > 0.5);
-  const showDecade = (selectedDecades.size > 0) || (Math.random() > 0.5);
-  const showType = (selectedTypes.size > 0) || (Math.random() > 0.5);
+  // Probabilidades originales (NO MODIFICAR)
+  const showCarModel = (selectedCarsIds.size > 0) || (Math.random() > 0.6);
+  let showCountry = (selectedCountries.size > 0) || (Math.random() > 0.2);
+  let showDecade = (selectedDecades.size > 0) || (Math.random() > 0.2);
+  let showType = (selectedTypes.size > 0) || (Math.random() > 0.2);
+
+  // 🔥 NUEVA REGLA: Si se muestra el coche concreto, los demás campos también deben ser concretos
+  if (showCarModel && selectedCarsIds.size === 0) {
+    showCountry = true;
+    showDecade = true;
+    showType = true;
+  }
 
   if (showCarModel) {
     resultCarSpan.innerText = `${pickedCar.make} ${pickedCar.model}`;
@@ -302,42 +310,138 @@ function spinRoulette() {
   resultClassSpan.innerText = chosenClass;
 }
 
+// -------------------------------------------------------------
+// EFECTO WHEELSPIN CON FRENADO (todos los campos)
+// -------------------------------------------------------------
+let spinAnimationActive = false;
+
 function startSpinSequence() {
-  loadingOverlay.style.display = 'flex';
-  spinButton.disabled = true;
-  setTimeout(() => {
+    if (spinAnimationActive) return;
+    spinAnimationActive = true;
+    spinButton.disabled = true;
+    
+    // Limpiamos resultados anteriores
+    resultCarSpan.innerText = '🌀';
+    resultCountrySpan.innerText = '🌀';
+    resultDecadeSpan.innerText = '🌀';
+    resultStyleSpan.innerText = '🌀';
+    resultClassSpan.innerText = '🌀';
+    
+    // Secuencia de tiempos (cada vez más largos) para simular frenado
+    const intervals = [20, 20, 25, 30, 35, 45, 55, 70, 90, 120, 160, 220, 300, 400];
+    let step = 0;
+    
+    function randomFrom(arr) {
+        if (!arr.length) return '???';
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+    
+    function getPools() {
+        const availableCars = getAvailableCars();
+        const availableCountries = getAvailableCountries();
+        const availableDecades = getAvailableDecades();
+        const availableStyles = getAvailableTypes();
+        const availableClasses = selectedClasses.size > 0 ? Array.from(selectedClasses) : PERFORMANCE_CLASSES;
+        return { availableCars, availableCountries, availableDecades, availableStyles, availableClasses };
+    }
+    
+    function updateSpin() {
+        const pools = getPools();
+        
+        // Actualizar cada campo con valores aleatorios (sin "Any..." durante la animación para mantener la espectacularidad)
+        if (pools.availableCars.length) {
+            const randomCar = randomFrom(pools.availableCars);
+            resultCarSpan.innerText = `${randomCar.make} ${randomCar.model}`;
+        }
+        if (pools.availableCountries.length) {
+            resultCountrySpan.innerText = randomFrom(pools.availableCountries);
+        }
+        if (pools.availableDecades.length) {
+            resultDecadeSpan.innerText = randomFrom(pools.availableDecades);
+        }
+        if (pools.availableStyles.length) {
+            resultStyleSpan.innerText = randomFrom(pools.availableStyles);
+        }
+        if (pools.availableClasses.length) {
+            resultClassSpan.innerText = randomFrom(pools.availableClasses);
+        }
+        
+        if (step < intervals.length - 1) {
+            step++;
+            setTimeout(updateSpin, intervals[step]);
+        } else {
+    // Último paso: mostrar resultado real
     spinRoulette();
-    loadingOverlay.style.display = 'none';
+    
+    // Mostrar popup con SweetAlert2
+    if (typeof Swal !== 'undefined') {
+        const carText = resultCarSpan.innerText;
+        const countryText = resultCountrySpan.innerText;
+        const decadeText = resultDecadeSpan.innerText;
+        const styleText = resultStyleSpan.innerText;
+        const classText = resultClassSpan.innerText;
+        
+        // Evitar mostrar el popup si es un mensaje de error
+        if (!carText.includes('❌') && !carText.includes('No matching')) {
+            Swal.fire({
+                title: '🎉 ¡Desafío generado! 🎉',
+                html: `
+                    <div style="text-align: center;">
+                        <p><strong>🚗 Coche:</strong> ${carText}</p>
+                        <p><strong>🌍 País:</strong> ${countryText}</p>
+                        <p><strong>📅 Década:</strong> ${decadeText}</p>
+                        <p><strong>🏎️ Estilo:</strong> ${styleText}</p>
+                        <p><strong>⚙️ Clase:</strong> ${classText}</p>
+                    </div>
+                `,
+                icon: 'success',
+                confirmButtonText: '¡Aceptar el reto!',
+                background: '#1e1e2f',
+                color: '#fff',
+                confirmButtonColor: '#f97316'
+            });
+        } else {
+            // Si no hay coches, mostrar error
+            Swal.fire({
+                title: '❌ Sin resultados',
+                text: 'No hay coches que cumplan los filtros seleccionados. Prueba con otros filtros.',
+                icon: 'error',
+                confirmButtonText: 'Vale'
+            });
+        }
+    }
+    
+    spinAnimationActive = false;
     spinButton.disabled = false;
-  }, 500);
+}
+    }
+    
+    setTimeout(updateSpin, intervals[0]);
 }
 
 // -------------------------------------------------------------
-// 7. CARGA DE LOS DOS JSON (con los nombres CORRECTOS)
+// 7. CARGA DE LOS DOS JSON
 // -------------------------------------------------------------
 let brandsLoaded = false;
 let carsLoaded = false;
 
 function checkAllDataLoaded() {
   if (brandsLoaded && carsLoaded) {
-    // Asignar país a cada coche usando el mapa
     carsDatabase.forEach(car => {
       car.country = brandsCountries[car.make] || 'Unknown';
     });
     datasetStatusSpan.innerText = `${carsDatabase.length} cars loaded.`;
     fullRender();
-    // Limpiar selecciones iniciales
     selectedManufacturers.clear();
     selectedCarsIds.clear();
     selectedCountries.clear();
     selectedDecades.clear();
     selectedTypes.clear();
     selectedClasses.clear();
-    fullRender(); // para poner todos los checkboxes sin marcar
+    fullRender();
   }
 }
 
-// Cargar fh6_brands_countries.json
 fetch('fh6_brands_countries.json')
   .then(response => response.json())
   .then(data => {
@@ -350,7 +454,6 @@ fetch('fh6_brands_countries.json')
     datasetStatusSpan.innerText = '❌ Failed to load brand data.';
   });
 
-// Cargar fh6_cars.json
 fetch('fh6_cars.json')
   .then(response => response.json())
   .then(data => {
@@ -363,23 +466,17 @@ fetch('fh6_cars.json')
     datasetStatusSpan.innerText = '❌ Failed to load car data.';
   });
 
-
 // -------------------------------------------------------------
 // 8. FUNCIÓN PARA LIMPIAR FILTROS
 // -------------------------------------------------------------
 function clearAllFilters() {
-    // Limpiar todos los Sets de selección
     selectedManufacturers.clear();
     selectedCarsIds.clear();
     selectedCountries.clear();
     selectedDecades.clear();
     selectedTypes.clear();
     selectedClasses.clear();
-    
-    // Re-renderizar todos los checkboxes (esto los desmarca)
     fullRender();
-    
-    // Opcional: también puedes resetear el resultado si lo prefieres
     resultCarSpan.innerText = '---';
     resultCountrySpan.innerText = '---';
     resultDecadeSpan.innerText = '---';
@@ -387,12 +484,9 @@ function clearAllFilters() {
     resultClassSpan.innerText = '---';
 }
 
-// Añadir el evento click al botón de limpiar
 const clearButton = document.getElementById('clearFiltersButton');
 if (clearButton) {
     clearButton.addEventListener('click', clearAllFilters);
 }
 
-
-// Evento del botón
 spinButton.addEventListener('click', startSpinSequence);
