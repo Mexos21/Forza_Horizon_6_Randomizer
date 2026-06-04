@@ -2,6 +2,8 @@
 
 An interactive, web-based race randomizer for **Forza Horizon 6**. Break the analysis paralysis by generating unique driving challenges based on a database of 600+ cars and multiple filtering layers.
 
+https://horizon-picker.com/
+
 > ⏱️ *Developed in a midnight coding session – simple, fast, and works everywhere.*
 
 ## 📸 Preview
