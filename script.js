@@ -384,14 +384,14 @@ function startSpinSequence() {
         // Evitar mostrar el popup si es un mensaje de error
         if (!carText.includes('❌') && !carText.includes('No matching')) {
             Swal.fire({
-                title: '🎉 ¡Desafío generado! 🎉',
+                title: '🎉 Race generated! 🎉',
                 html: `
                     <div style="text-align: center;">
-                        <p><strong>🚗 Coche:</strong> ${carText}</p>
-                        <p><strong>🌍 País:</strong> ${countryText}</p>
-                        <p><strong>📅 Década:</strong> ${decadeText}</p>
-                        <p><strong>🏎️ Estilo:</strong> ${styleText}</p>
-                        <p><strong>⚙️ Clase:</strong> ${classText}</p>
+                        <p><strong>🚗 Car:</strong> ${carText}</p>
+                        <p><strong>🌍 Country:</strong> ${countryText}</p>
+                        <p><strong>📅 Decade:</strong> ${decadeText}</p>
+                        <p><strong>🏎️ Style:</strong> ${styleText}</p>
+                        <p><strong>⚙️ Class:</strong> ${classText}</p>
                     </div>
                 `,
                 icon: 'success',
@@ -490,3 +490,32 @@ if (clearButton) {
 }
 
 spinButton.addEventListener('click', startSpinSequence);
+
+
+
+
+// -------------------------------------------------------------
+// TEMA OSCURO / CLARO (JDM / Horizon Festival)
+// -------------------------------------------------------------
+const themeToggle = document.getElementById('themeToggleBtn');
+if (themeToggle) {
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+
+    function setTheme(theme) {
+        if (theme === 'light') {
+            document.body.classList.add('light-mode');
+            themeToggle.textContent = '🌞 Modo Horizon';
+        } else {
+            document.body.classList.remove('light-mode');
+            themeToggle.textContent = '🌙 Modo JDM';
+        }
+        localStorage.setItem('theme', theme);
+    }
+
+    themeToggle.addEventListener('click', () => {
+        const newTheme = document.body.classList.contains('light-mode') ? 'dark' : 'light';
+        setTheme(newTheme);
+    });
+
+    setTheme(currentTheme);
+}

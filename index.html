@@ -1,18 +1,25 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FH6 Advanced Challenge Generator</title>
   <link rel="stylesheet" href="style.css">
   <!-- SweetAlert2 CSS y JS -->
-<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
   <div class="container">
-    <h2>🎰 FH6 Advanced Challenge Generator</h2>
-    
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+      <h2>🎰 FH6 Advanced Challenge Generator</h2>
+      <button id="themeToggleBtn"
+        style="background: #e53e3e; border: none; border-radius: 40px; padding: 6px 16px; color: white; font-weight: bold; cursor: pointer; width: auto;">🌙
+        Modo JDM</button>
+    </div>
+
     <div class="dataset-status">
       <strong>📊 Dataset Status:</strong> <span id="datasetStatus">Loading cars...</span>
     </div>
@@ -61,7 +68,7 @@
     <button id="spinButton">🎯 Spin Roulette</button>
 
     <button id="clearFiltersButton" style="background: #4a5568; margin-top: 10px;">🗑️ Clear Filter</button>
-    
+
     <div class="result-box">
       <h3>Current Challenge Target:</h3>
       <div id="resultContent">
@@ -80,4 +87,5 @@
 
   <script src="script.js"></script>
 </body>
+
 </html>
