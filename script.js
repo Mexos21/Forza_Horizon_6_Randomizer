@@ -247,7 +247,7 @@ function fullRender() {
 }
 
 // -------------------------------------------------------------
-// 6. LÓGICA DE GENERACIÓN DEL DESAFÍO (versión mejorada)
+// 6. LÓGICA DE GENERACIÓN DEL DESAFÍO
 // -------------------------------------------------------------
 function generateRandomChallenge() {
   let pool = [...carsDatabase];
@@ -269,7 +269,7 @@ function generateRandomChallenge() {
   const realCountry = pickedCar.country;
   const realDecade = getCarDecade(pickedCar.year);
   const realType = pickedCar.type || 'Unknown';
-  const realMake = pickedCar.make;   // ← NUEVO: guardamos la marca real
+  const realMake = pickedCar.make;
 
   let chosenClass = '';
   if (selectedClasses.size > 0) {
@@ -313,18 +313,9 @@ function generateRandomChallenge() {
   const styleText = showType ? realType : 'Any Style 🏷️';
   const classText = chosenClass;
 
-  // Devolvemos toda la información necesaria para mostrar el fabricante correctamente
   return {
-    carText,
-    countryText,
-    decadeText,
-    styleText,
-    classText,
-    realMake,
-    showCarModel,
-    showCountry,
-    showDecade,
-    showType
+    carText, countryText, decadeText, styleText, classText, realMake,
+    showCarModel, showCountry, showDecade, showType
   };
 }
 
@@ -332,18 +323,9 @@ function generateRandomChallenge() {
 // HELPER: Obtener fabricante a mostrar en el resultado final
 // -------------------------------------------------------------
 function getManufacturerFromChallenge(challenge) {
-  const { carText, realMake, showCarModel, showCountry, showDecade, showType } = challenge;
-
-  // Si se muestra el coche concreto (modo estricto o porque el azar lo decidió), la marca es la real
+  const { carText, realMake, showCarModel } = challenge;
   if (showCarModel) return realMake;
-
-  // Modo normal: el coche no se muestra ("Any Car" o "Any [marcas]")
-  // Decidir si mostrar la marca real o "Any" con una probabilidad del 30%
-  if (!strictModeEnabled && Math.random() < 0.3) {
-    return realMake;  // muestra la marca del coche elegido internamente
-  }
-
-  // Si no, extraer del texto del coche (puede ser "Any" o "BMW/Audi")
+  if (!strictModeEnabled && Math.random() < 0.3) return realMake;
   if (carText.includes('Any Car')) return 'Any';
   if (carText.includes('Any ') && !carText.includes('Any Car')) {
     const match = carText.match(/Any (.+?)!/);
@@ -354,7 +336,7 @@ function getManufacturerFromChallenge(challenge) {
 }
 
 // -------------------------------------------------------------
-// RULETA DENTRO DE SWEETALERT2 (con las mejoras)
+// RULETA DENTRO DE SWEETALERT2 (con botón Reroll corregido)
 // -------------------------------------------------------------
 let spinInProgress = false;
 
@@ -365,6 +347,9 @@ function startSpinSequence() {
 
   const intervals = [20, 20, 25, 30, 35, 45, 55, 70, 90, 120, 160, 220, 300, 400];
   let step = 0;
+  let animationTimer = null;
+  let finalTimer = null;
+  let rerollBtn = null;
 
   function randomFrom(arr) {
     if (!arr.length) return '???';
@@ -380,16 +365,10 @@ function startSpinSequence() {
     return { availableCars, availableCountries, availableDecades, availableStyles, availableClasses };
   }
 
-  // Generar fabricante aleatorio durante la animación (modo normal)
   function randomManufacturer() {
     const allMakes = getUniqueManufacturers();
     if (allMakes.length === 0) return 'Unknown';
-    // 90% probabilidad de mostrar una marca real, 10% "Any"
-    if (Math.random() < 0.9) {
-      return randomFrom(allMakes);
-    } else {
-      return 'Any';
-    }
+    return Math.random() < 0.9 ? randomFrom(allMakes) : 'Any';
   }
 
   function updateModalContent() {
@@ -411,7 +390,6 @@ function startSpinSequence() {
       if (pools.availableStyles.length) styleText = randomFrom(pools.availableStyles);
       if (pools.availableClasses.length) classText = randomFrom(pools.availableClasses);
     } else {
-      // Modo normal: coche = "Any ..."
       if (selectedManufacturers.size > 0) {
         const brandsText = Array.from(selectedManufacturers).join('/');
         carText = `Any ${brandsText}! 🏎️`;
@@ -439,16 +417,26 @@ function startSpinSequence() {
     if (classSpan) classSpan.innerText = classText;
   }
 
+  function cancelAnimation() {
+    if (animationTimer) clearTimeout(animationTimer);
+    if (finalTimer) clearTimeout(finalTimer);
+    if (Swal.isVisible()) Swal.close();
+  }
+
+  // Abrir modal con botón Reroll deshabilitado durante la animación
   Swal.fire({
     title: '🎲 WHEELSPIN 🎲',
     html: `
       <div style="text-align: center;">
-        <p><strong>🏭 Manufacturer:</strong> <span id="swalManufacturer">🌀</span></p>
-        <p><strong>🚗 Car:</strong> <span id="swalCar">🌀</span></p>
-        <p><strong>🌍 Country:</strong> <span id="swalCountry">🌀</span></p>
-        <p><strong>📅 Decade:</strong> <span id="swalDecade">🌀</span></p>
-        <p><strong>🏎️ Style:</strong> <span id="swalStyle">🌀</span></p>
-        <p><strong>⚙️ Class:</strong> <span id="swalClass">🌀</span></p>
+        <button id="swalRerollBtn" style="background: #4a5568; border: none; border-radius: 40px; padding: 6px 16px; margin-bottom: 15px; color: white; font-weight: bold; cursor: pointer; font-size: 13px;" disabled>🔄 Reroll Challenge</button>
+        <div>
+          <p><strong>🏭 Manufacturer:</strong> <span id="swalManufacturer">🌀</span></p>
+          <p><strong>🚗 Car:</strong> <span id="swalCar">🌀</span></p>
+          <p><strong>🌍 Country:</strong> <span id="swalCountry">🌀</span></p>
+          <p><strong>📅 Decade:</strong> <span id="swalDecade">🌀</span></p>
+          <p><strong>🏎️ Style:</strong> <span id="swalStyle">🌀</span></p>
+          <p><strong>⚙️ Class:</strong> <span id="swalClass">🌀</span></p>
+        </div>
       </div>
     `,
     icon: 'info',
@@ -466,17 +454,20 @@ function startSpinSequence() {
       const cancelBtn = modal.querySelector('.swal2-cancel');
       if (confirmBtn) confirmBtn.disabled = true;
       if (cancelBtn) cancelBtn.disabled = true;
+      rerollBtn = document.getElementById('swalRerollBtn');
+      if (rerollBtn) {
+        rerollBtn.disabled = true;
+        rerollBtn.addEventListener('click', () => {
+          cancelAnimation();
+          startSpinSequence();
+        });
+      }
     }
   }).then((result) => {
     if (result.isConfirmed) {
       const exactPoints = strictModeEnabled ? 15 : 5;
       addPoints(exactPoints);
-      Swal.fire({
-        title: `+${exactPoints} points!`,
-        text: strictModeEnabled ? 'Great job using the exact car!' : 'Well done!',
-        icon: 'success',
-        confirmButtonText: 'OK'
-      });
+      Swal.fire({ title: `+${exactPoints} points!`, text: strictModeEnabled ? 'Great job using the exact car!' : 'Well done!', icon: 'success', confirmButtonText: 'OK' });
     } else if (result.dismiss === Swal.DismissReason.cancel) {
       Swal.fire('No points added', 'Maybe next time!', 'error');
     }
@@ -491,125 +482,98 @@ function startSpinSequence() {
     updateModalContent();
     if (step < intervals.length - 1) {
       step++;
-      setTimeout(animate, intervals[step]);
+      animationTimer = setTimeout(animate, intervals[step]);
     } else {
-      // Terminar animación y mostrar resultado real
-      const challenge = generateRandomChallenge();
-      if (!challenge) {
-        Swal.close();
-        Swal.fire({
-          title: '❌ No Results',
-          text: 'No matching cars found. Try different filters.',
-          icon: 'error',
-          confirmButtonText: 'OK'
-        }).then(() => {
-          spinInProgress = false;
-          spinButton.disabled = false;
+      animationTimer = null;
+      finalTimer = setTimeout(() => {
+        const challenge = generateRandomChallenge();
+        if (!challenge) {
+          Swal.close();
+          Swal.fire({ title: '❌ No Results', text: 'No matching cars found. Try different filters.', icon: 'error', confirmButtonText: 'OK' }).then(() => {
+            spinInProgress = false;
+            spinButton.disabled = false;
+          });
+          return;
+        }
+        const { carText, countryText, decadeText, styleText, classText } = challenge;
+        const manufacturer = getManufacturerFromChallenge(challenge);
+        // IMPORTANTE: Incluir el botón Reroll también en el HTML actualizado, ahora habilitado
+        Swal.update({
+          title: strictModeEnabled ? '🎯 Strict Challenge!' : '🎉 Challenge Generated!',
+          html: `
+            <div style="text-align: center;">
+              <button id="swalRerollBtn" style="background: #4a5568; border: none; border-radius: 40px; padding: 6px 16px; margin-bottom: 15px; color: white; font-weight: bold; cursor: pointer; font-size: 13px;">🔄 Reroll Challenge</button>
+              <div>
+                <p><strong>🏭 Manufacturer:</strong> ${manufacturer}</p>
+                <p><strong>🚗 Car:</strong> ${carText}</p>
+                <p><strong>🌍 Country:</strong> ${countryText}</p>
+                <p><strong>📅 Decade:</strong> ${decadeText}</p>
+                <p><strong>🏎️ Style:</strong> ${styleText}</p>
+                <p><strong>⚙️ Class:</strong> ${classText}</p>
+              </div>
+            </div>
+          `,
+          confirmButtonDisabled: false,
+          cancelButtonDisabled: false
         });
-        return;
-      }
-      const { carText, countryText, decadeText, styleText, classText } = challenge;
-      const manufacturer = getManufacturerFromChallenge(challenge); // ← USO DE NUEVA FUNCIÓN
-      Swal.update({
-        title: strictModeEnabled ? '🎯 Strict Challenge!' : '🎉 Challenge Generated!',
-        html: `
-          <div style="text-align: center;">
-            <p><strong>🏭 Manufacturer:</strong> ${manufacturer}</p>
-            <p><strong>🚗 Car:</strong> ${carText}</p>
-            <p><strong>🌍 Country:</strong> ${countryText}</p>
-            <p><strong>📅 Decade:</strong> ${decadeText}</p>
-            <p><strong>🏎️ Style:</strong> ${styleText}</p>
-            <p><strong>⚙️ Class:</strong> ${classText}</p>
-          </div>
-        `,
-        confirmButtonDisabled: false,
-        cancelButtonDisabled: false
-      });
-      const modal = Swal.getPopup();
-      if (modal) {
-        const confirmBtn = modal.querySelector('.swal2-confirm');
-        const cancelBtn = modal.querySelector('.swal2-cancel');
-        if (confirmBtn) confirmBtn.disabled = false;
-        if (cancelBtn) cancelBtn.disabled = false;
-      }
-      spinInProgress = false;
-      spinButton.disabled = false;
+        const modal = Swal.getPopup();
+        if (modal) {
+          const confirmBtn = modal.querySelector('.swal2-confirm');
+          const cancelBtn = modal.querySelector('.swal2-cancel');
+          if (confirmBtn) confirmBtn.disabled = false;
+          if (cancelBtn) cancelBtn.disabled = false;
+          // Volver a enlazar el evento del botón Reroll (puede haberse perdido al regenerar el HTML)
+          const newRerollBtn = document.getElementById('swalRerollBtn');
+          if (newRerollBtn) {
+            newRerollBtn.addEventListener('click', () => {
+              // Cancelar y reiniciar sin sumar puntos
+              if (Swal.isVisible()) Swal.close();
+              startSpinSequence();
+            });
+          }
+        }
+        spinInProgress = false;
+        spinButton.disabled = false;
+      }, 50);
     }
   }
 
-  setTimeout(animate, intervals[0]);
+  animationTimer = setTimeout(animate, intervals[0]);
 }
 
 // -------------------------------------------------------------
-// 7. CARGA DE LOS DOS JSON Y HABILITACIÓN DEL BOTÓN
+// 7. CARGA DE JSON
 // -------------------------------------------------------------
 let brandsLoaded = false;
 let carsLoaded = false;
 
 function checkAllDataLoaded() {
   if (brandsLoaded && carsLoaded) {
-    carsDatabase.forEach(car => {
-      car.country = brandsCountries[car.make] || 'Unknown';
-    });
+    carsDatabase.forEach(car => { car.country = brandsCountries[car.make] || 'Unknown'; });
     datasetStatusSpan.innerText = `${carsDatabase.length} cars loaded.`;
     fullRender();
-    // Limpiar selecciones iniciales
-    selectedManufacturers.clear();
-    selectedCarsIds.clear();
-    selectedCountries.clear();
-    selectedDecades.clear();
-    selectedTypes.clear();
-    selectedClasses.clear();
+    selectedManufacturers.clear(); selectedCarsIds.clear(); selectedCountries.clear();
+    selectedDecades.clear(); selectedTypes.clear(); selectedClasses.clear();
     fullRender();
     spinButton.disabled = false;
   }
 }
 
 spinButton.disabled = true;
-
-fetch('fh6_brands_countries.json')
-  .then(response => response.json())
-  .then(data => {
-    brandsCountries = data;
-    brandsLoaded = true;
-    checkAllDataLoaded();
-  })
-  .catch(error => {
-    console.error('Error loading brands-countries.json:', error);
-    datasetStatusSpan.innerText = '❌ Failed to load brand data.';
-    spinButton.disabled = false;
-  });
-
-fetch('fh6_cars.json')
-  .then(response => response.json())
-  .then(data => {
-    carsDatabase = data;
-    carsLoaded = true;
-    checkAllDataLoaded();
-  })
-  .catch(error => {
-    console.error('Error loading cars.json:', error);
-    datasetStatusSpan.innerText = '❌ Failed to load car data.';
-    spinButton.disabled = false;
-  });
+fetch('fh6_brands_countries.json').then(r => r.json()).then(d => { brandsCountries = d; brandsLoaded = true; checkAllDataLoaded(); }).catch(e => { console.error(e); datasetStatusSpan.innerText = '❌ Failed to load brand data.'; spinButton.disabled = false; });
+fetch('fh6_cars.json').then(r => r.json()).then(d => { carsDatabase = d; carsLoaded = true; checkAllDataLoaded(); }).catch(e => { console.error(e); datasetStatusSpan.innerText = '❌ Failed to load car data.'; spinButton.disabled = false; });
 
 // -------------------------------------------------------------
 // 8. LIMPIAR FILTROS
 // -------------------------------------------------------------
 function clearAllFilters() {
   if (strictModeEnabled) return;
-  selectedManufacturers.clear();
-  selectedCarsIds.clear();
-  selectedCountries.clear();
-  selectedDecades.clear();
-  selectedTypes.clear();
-  selectedClasses.clear();
+  selectedManufacturers.clear(); selectedCarsIds.clear(); selectedCountries.clear();
+  selectedDecades.clear(); selectedTypes.clear(); selectedClasses.clear();
   fullRender();
 }
-
 const clearButton = document.getElementById('clearFiltersButton');
 if (clearButton) clearButton.addEventListener('click', clearAllFilters);
-
 spinButton.addEventListener('click', startSpinSequence);
 
 // -------------------------------------------------------------
@@ -619,19 +583,11 @@ const themeToggle = document.getElementById('themeToggleBtn');
 if (themeToggle) {
   const currentTheme = localStorage.getItem('theme') || 'dark';
   function setTheme(theme) {
-    if (theme === 'light') {
-      document.body.classList.add('light-mode');
-      themeToggle.textContent = '🌞 Horizon Mode';
-    } else {
-      document.body.classList.remove('light-mode');
-      themeToggle.textContent = '🌙 JDM Mode';
-    }
+    if (theme === 'light') { document.body.classList.add('light-mode'); themeToggle.textContent = '🌞 Horizon Mode'; }
+    else { document.body.classList.remove('light-mode'); themeToggle.textContent = '🌙 JDM Mode'; }
     localStorage.setItem('theme', theme);
   }
-  themeToggle.addEventListener('click', () => {
-    const newTheme = document.body.classList.contains('light-mode') ? 'dark' : 'light';
-    setTheme(newTheme);
-  });
+  themeToggle.addEventListener('click', () => { const newTheme = document.body.classList.contains('light-mode') ? 'dark' : 'light'; setTheme(newTheme); });
   setTheme(currentTheme);
 }
 
@@ -640,142 +596,46 @@ if (themeToggle) {
 // -------------------------------------------------------------
 let honorPoints = 0;
 const pointsDisplay = document.getElementById('pointsDisplay');
-
-function loadPoints() {
-  const saved = localStorage.getItem('honorPoints');
-  honorPoints = saved ? parseInt(saved, 10) : 0;
-  updatePointsDisplay();
-}
-function updatePointsDisplay() {
-  if (pointsDisplay) pointsDisplay.innerText = honorPoints;
-}
-function addPoints(amount) {
-  honorPoints += amount;
-  localStorage.setItem('honorPoints', honorPoints);
-  updatePointsDisplay();
-}
-function resetPoints() {
-  honorPoints = 0;
-  localStorage.setItem('honorPoints', 0);
-  updatePointsDisplay();
-  Swal.fire({
-    title: 'Points Reset',
-    text: 'Your honor points have been reset to 0.',
-    icon: 'info',
-    confirmButtonText: 'OK',
-    background: '#1e1e2f',
-    color: '#fff',
-    confirmButtonColor: '#f97316'
-  });
-}
-
-// -------------------------------------------------------------
-// MODO ESTRICTO: carga y aplicación
-// -------------------------------------------------------------
-function applyStrictModeUI() {
-  if (strictModeEnabled) {
-    selectedManufacturers.clear();
-    selectedCarsIds.clear();
-    selectedCountries.clear();
-    selectedDecades.clear();
-    selectedTypes.clear();
-    fullRender();
-  } else {
-    fullRender();
-  }
-}
-
-if (strictModeToggle) {
-  const savedStrictMode = localStorage.getItem('strictModeEnabled');
-  if (savedStrictMode !== null) {
-    strictModeEnabled = savedStrictMode === 'true';
-    strictModeToggle.checked = strictModeEnabled;
-    applyStrictModeUI();
-  }
-  strictModeToggle.addEventListener('change', (e) => {
-    strictModeEnabled = e.target.checked;
-    localStorage.setItem('strictModeEnabled', strictModeEnabled);
-    applyStrictModeUI();
-  });
-}
-
+function loadPoints() { const saved = localStorage.getItem('honorPoints'); honorPoints = saved ? parseInt(saved,10) : 0; updatePointsDisplay(); }
+function updatePointsDisplay() { if (pointsDisplay) pointsDisplay.innerText = honorPoints; }
+function addPoints(amount) { honorPoints += amount; localStorage.setItem('honorPoints', honorPoints); updatePointsDisplay(); }
+function resetPoints() { honorPoints = 0; localStorage.setItem('honorPoints', 0); updatePointsDisplay(); Swal.fire({ title: 'Points Reset', text: 'Your honor points have been reset to 0.', icon: 'info', confirmButtonText: 'OK', background: '#1e1e2f', color: '#fff', confirmButtonColor: '#f97316' }); }
 loadPoints();
 
 // -------------------------------------------------------------
-// INSTRUCCIONES (con reset points)
+// MODO ESTRICTO
+// -------------------------------------------------------------
+function applyStrictModeUI() {
+  if (strictModeEnabled) { selectedManufacturers.clear(); selectedCarsIds.clear(); selectedCountries.clear(); selectedDecades.clear(); selectedTypes.clear(); fullRender(); }
+  else { fullRender(); }
+}
+if (strictModeToggle) {
+  const savedStrictMode = localStorage.getItem('strictModeEnabled');
+  if (savedStrictMode !== null) { strictModeEnabled = savedStrictMode === 'true'; strictModeToggle.checked = strictModeEnabled; applyStrictModeUI(); }
+  strictModeToggle.addEventListener('change', (e) => { strictModeEnabled = e.target.checked; localStorage.setItem('strictModeEnabled', strictModeEnabled); applyStrictModeUI(); });
+}
+
+// -------------------------------------------------------------
+// INSTRUCCIONES
 // -------------------------------------------------------------
 const instructionsBtn = document.getElementById('instructionsBtn');
 if (instructionsBtn) {
   instructionsBtn.addEventListener('click', () => {
     Swal.fire({
       title: '📖 How to Use',
-      html: `
-        <div style="text-align: left;">
-          <p><strong>1. Filter your car pool</strong><br>Select manufacturers, models, countries, decades, car styles, or performance classes.</p>
-          <p><strong>2. Spin the roulette</strong><br>Click <strong>Spin Roulette</strong> to get a random challenge inside the popup.</p>
-          <p><strong>3. Honor points system</strong><br>
-            - <strong>Normal mode (Strict OFF):</strong> Complete the challenge using ANY car that meets the criteria → <strong>+5 points</strong>.<br>
-            - <strong>Strict mode (ON):</strong> Use the EXACT car shown → <strong>+15 points</strong>. All other filters are disabled.<br>
-            Points are saved automatically.
-          </p>
-          <p><strong>4. Clear filters</strong><br>Use <strong>Clear Filter</strong> to reset all selections.</p>
-          <p><strong>5. Dark/Light mode</strong><br>Toggle between JDM dark mode and Horizon Festival light mode.</p>
-          <p><em>All data comes from Forza Horizon 6. Enjoy!</em></p>
-          <hr>
-          <button id="confirmResetBtn" style="background: #dc3545; border: none; border-radius: 40px; padding: 8px 16px; color: white; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;">⚠️ Reset Honor Points</button>
-        </div>
-      `,
-      icon: 'info',
-      confirmButtonText: 'Got it!',
-      background: '#1e1e2f',
-      color: '#fff',
-      confirmButtonColor: '#f97316',
+      html: `<div style="text-align: left;"><p><strong>1. Filter your car pool</strong><br>Select manufacturers, models, countries, decades, car styles, or performance classes.</p><p><strong>2. Spin the roulette</strong><br>Click <strong>Spin Roulette</strong> to get a random challenge inside the popup.</p><p><strong>3. Honor points system</strong><br>- <strong>Normal mode (Strict OFF):</strong> Complete the challenge using ANY car that meets the criteria → <strong>+5 points</strong>.<br>- <strong>Strict mode (ON):</strong> Use the EXACT car shown → <strong>+15 points</strong>. All other filters are disabled.<br>Points are saved automatically.</p><p><strong>4. Clear filters</strong><br>Use <strong>Clear Filter</strong> to reset all selections.</p><p><strong>5. Dark/Light mode</strong><br>Toggle between JDM dark mode and Horizon Festival light mode.</p><p><em>All data comes from Forza Horizon 6. Enjoy!</em></p><hr><button id="confirmResetBtn" style="background:#dc3545; border:none; border-radius:40px; padding:8px 16px; color:white; font-weight:bold; cursor:pointer; width:100%; margin-top:10px;">⚠️ Reset Honor Points</button></div>`,
+      icon: 'info', confirmButtonText: 'Got it!', background: '#1e1e2f', color: '#fff', confirmButtonColor: '#f97316',
       didOpen: () => {
         const resetBtn = document.getElementById('confirmResetBtn');
-        if (resetBtn) {
-          resetBtn.addEventListener('click', () => {
-            Swal.fire({
-              title: '⚠️ Are you sure?',
-              text: 'You will lose all your honor points!',
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonText: 'Yes, reset them!',
-              cancelButtonText: 'No, cancel',
-              confirmButtonColor: '#dc3545',
-              cancelButtonColor: '#28a745',
-              background: '#1e1e2f',
-              color: '#fff'
-            }).then((result) => {
-              if (result.isConfirmed) {
-                Swal.fire({
-                  title: '🔁 Really really sure?',
-                  text: 'Your points will be set to 0. This cannot be undone.',
-                  icon: 'question',
-                  showCancelButton: true,
-                  confirmButtonText: 'Yes, erase everything!',
-                  cancelButtonText: 'No, keep them',
-                  confirmButtonColor: '#dc3545',
-                  cancelButtonColor: '#28a745',
-                  background: '#1e1e2f',
-                  color: '#fff'
-                }).then((finalResult) => {
-                  if (finalResult.isConfirmed) {
-                    resetPoints();
-                    Swal.fire({
-                      title: 'Points reset!',
-                      text: 'Your honor points are now 0.',
-                      icon: 'success',
-                      confirmButtonText: 'OK',
-                      background: '#1e1e2f',
-                      color: '#fff',
-                      confirmButtonColor: '#f97316'
-                    });
-                  }
-                });
-              }
-            });
+        if (resetBtn) resetBtn.addEventListener('click', () => {
+          Swal.fire({ title: '⚠️ Are you sure?', text: 'You will lose all your honor points!', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes, reset them!', cancelButtonText: 'No, cancel', confirmButtonColor: '#dc3545', cancelButtonColor: '#28a745', background: '#1e1e2f', color: '#fff' }).then((result) => {
+            if (result.isConfirmed) {
+              Swal.fire({ title: '🔁 Really really sure?', text: 'Your points will be set to 0. This cannot be undone.', icon: 'question', showCancelButton: true, confirmButtonText: 'Yes, erase everything!', cancelButtonText: 'No, keep them', confirmButtonColor: '#dc3545', cancelButtonColor: '#28a745', background: '#1e1e2f', color: '#fff' }).then((finalResult) => {
+                if (finalResult.isConfirmed) { resetPoints(); Swal.fire({ title: 'Points reset!', text: 'Your honor points are now 0.', icon: 'success', confirmButtonText: 'OK', background: '#1e1e2f', color: '#fff', confirmButtonColor: '#f97316' }); }
+              });
+            }
           });
-        }
+        });
       }
     });
   });
