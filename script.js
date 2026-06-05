@@ -34,6 +34,10 @@ const resultDecadeSpan = document.getElementById('resultDecade');
 const resultStyleSpan = document.getElementById('resultStyle');
 const resultClassSpan = document.getElementById('resultClass');
 
+// Modo estricto (toggle)
+let strictModeEnabled = false;
+const strictModeToggle = document.getElementById('strictModeToggle');
+
 // -------------------------------------------------------------
 // 4. FUNCIONES AUXILIARES
 // -------------------------------------------------------------
@@ -236,7 +240,7 @@ function fullRender() {
 }
 
 // -------------------------------------------------------------
-// 6. LÓGICA DE LA RULETA (modificada para coherencia)
+// 6. LÓGICA DE LA RULETA (con modo estricto)
 // -------------------------------------------------------------
 function spinRoulette() {
   let pool = [...carsDatabase];
@@ -280,13 +284,21 @@ function spinRoulette() {
     chosenClass = PERFORMANCE_CLASSES[Math.floor(Math.random() * PERFORMANCE_CLASSES.length)];
   }
 
-  // Probabilidades originales (NO MODIFICAR)
-  const showCarModel = (selectedCarsIds.size > 0) || (Math.random() > 0.6);
+  // Probabilidades originales
+  let showCarModel = (selectedCarsIds.size > 0) || (Math.random() > 0.6);
   let showCountry = (selectedCountries.size > 0) || (Math.random() > 0.2);
   let showDecade = (selectedDecades.size > 0) || (Math.random() > 0.2);
   let showType = (selectedTypes.size > 0) || (Math.random() > 0.2);
 
-  // 🔥 NUEVA REGLA: Si se muestra el coche concreto, los demás campos también deben ser concretos
+  // 🔥 MODO ESTRICTO: forzar todos los campos a concretos
+  if (strictModeEnabled) {
+    showCarModel = true;
+    showCountry = true;
+    showDecade = true;
+    showType = true;
+  }
+
+  // Regla original: si se muestra coche concreto, los demás también
   if (showCarModel && selectedCarsIds.size === 0) {
     showCountry = true;
     showDecade = true;
@@ -316,107 +328,127 @@ function spinRoulette() {
 let spinAnimationActive = false;
 
 function startSpinSequence() {
-    if (spinAnimationActive) return;
-    spinAnimationActive = true;
-    spinButton.disabled = true;
-    
-    // Limpiamos resultados anteriores
-    resultCarSpan.innerText = '🌀';
-    resultCountrySpan.innerText = '🌀';
-    resultDecadeSpan.innerText = '🌀';
-    resultStyleSpan.innerText = '🌀';
-    resultClassSpan.innerText = '🌀';
-    
-    // Secuencia de tiempos (cada vez más largos) para simular frenado
-    const intervals = [20, 20, 25, 30, 35, 45, 55, 70, 90, 120, 160, 220, 300, 400];
-    let step = 0;
-    
-    function randomFrom(arr) {
-        if (!arr.length) return '???';
-        return arr[Math.floor(Math.random() * arr.length)];
+  if (spinAnimationActive) return;
+  spinAnimationActive = true;
+  spinButton.disabled = true;
+
+  // Limpiamos resultados anteriores
+  resultCarSpan.innerText = '🌀';
+  resultCountrySpan.innerText = '🌀';
+  resultDecadeSpan.innerText = '🌀';
+  resultStyleSpan.innerText = '🌀';
+  resultClassSpan.innerText = '🌀';
+
+  // Secuencia de tiempos (cada vez más largos) para simular frenado
+  const intervals = [20, 20, 25, 30, 35, 45, 55, 70, 90, 120, 160, 220, 300, 400];
+  let step = 0;
+
+  function randomFrom(arr) {
+    if (!arr.length) return '???';
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function getPools() {
+    const availableCars = getAvailableCars();
+    const availableCountries = getAvailableCountries();
+    const availableDecades = getAvailableDecades();
+    const availableStyles = getAvailableTypes();
+    const availableClasses = selectedClasses.size > 0 ? Array.from(selectedClasses) : PERFORMANCE_CLASSES;
+    return { availableCars, availableCountries, availableDecades, availableStyles, availableClasses };
+  }
+
+  function updateSpin() {
+    const pools = getPools();
+
+    // Actualizar cada campo con valores aleatorios (sin "Any..." durante la animación)
+    if (pools.availableCars.length) {
+      const randomCar = randomFrom(pools.availableCars);
+      resultCarSpan.innerText = `${randomCar.make} ${randomCar.model}`;
     }
-    
-    function getPools() {
-        const availableCars = getAvailableCars();
-        const availableCountries = getAvailableCountries();
-        const availableDecades = getAvailableDecades();
-        const availableStyles = getAvailableTypes();
-        const availableClasses = selectedClasses.size > 0 ? Array.from(selectedClasses) : PERFORMANCE_CLASSES;
-        return { availableCars, availableCountries, availableDecades, availableStyles, availableClasses };
+    if (pools.availableCountries.length) {
+      resultCountrySpan.innerText = randomFrom(pools.availableCountries);
     }
-    
-    function updateSpin() {
-        const pools = getPools();
-        
-        // Actualizar cada campo con valores aleatorios (sin "Any..." durante la animación para mantener la espectacularidad)
-        if (pools.availableCars.length) {
-            const randomCar = randomFrom(pools.availableCars);
-            resultCarSpan.innerText = `${randomCar.make} ${randomCar.model}`;
-        }
-        if (pools.availableCountries.length) {
-            resultCountrySpan.innerText = randomFrom(pools.availableCountries);
-        }
-        if (pools.availableDecades.length) {
-            resultDecadeSpan.innerText = randomFrom(pools.availableDecades);
-        }
-        if (pools.availableStyles.length) {
-            resultStyleSpan.innerText = randomFrom(pools.availableStyles);
-        }
-        if (pools.availableClasses.length) {
-            resultClassSpan.innerText = randomFrom(pools.availableClasses);
-        }
-        
-        if (step < intervals.length - 1) {
-            step++;
-            setTimeout(updateSpin, intervals[step]);
-        } else {
-    // Último paso: mostrar resultado real
-    spinRoulette();
-    
-    // Mostrar popup con SweetAlert2
-    if (typeof Swal !== 'undefined') {
+    if (pools.availableDecades.length) {
+      resultDecadeSpan.innerText = randomFrom(pools.availableDecades);
+    }
+    if (pools.availableStyles.length) {
+      resultStyleSpan.innerText = randomFrom(pools.availableStyles);
+    }
+    if (pools.availableClasses.length) {
+      resultClassSpan.innerText = randomFrom(pools.availableClasses);
+    }
+
+    if (step < intervals.length - 1) {
+      step++;
+      setTimeout(updateSpin, intervals[step]);
+    } else {
+      // Último paso: mostrar resultado real
+      spinRoulette();
+
+      // Mostrar popup con SweetAlert2
+      if (typeof Swal !== 'undefined') {
         const carText = resultCarSpan.innerText;
         const countryText = resultCountrySpan.innerText;
         const decadeText = resultDecadeSpan.innerText;
         const styleText = resultStyleSpan.innerText;
         const classText = resultClassSpan.innerText;
-        
-        // Evitar mostrar el popup si es un mensaje de error
+
+        // Evitar mostrar si es error
         if (!carText.includes('❌') && !carText.includes('No matching')) {
-            Swal.fire({
-                title: '🎉 Race generated! 🎉',
-                html: `
-                    <div style="text-align: center;">
-                        <p><strong>🚗 Car:</strong> ${carText}</p>
-                        <p><strong>🌍 Country:</strong> ${countryText}</p>
-                        <p><strong>📅 Decade:</strong> ${decadeText}</p>
-                        <p><strong>🏎️ Style:</strong> ${styleText}</p>
-                        <p><strong>⚙️ Class:</strong> ${classText}</p>
-                    </div>
-                `,
-                icon: 'success',
-                confirmButtonText: 'Accept challenge!',
-                background: '#1e1e2f',
-                color: '#fff',
-                confirmButtonColor: '#f97316'
-            });
+          // Determinar puntos según modo estricto
+          const exactPoints = strictModeEnabled ? 15 : 10;
+          const similarPoints = strictModeEnabled ? 10 : 5;
+
+          Swal.fire({
+            title: '🎉 Challenge Generated! 🎉',
+            html: `
+                <div style="text-align: center;">
+                    <p><strong>🚗 Car:</strong> ${carText}</p>
+                    <p><strong>🌍 Country:</strong> ${countryText}</p>
+                    <p><strong>📅 Decade:</strong> ${decadeText}</p>
+                    <p><strong>🏎️ Style:</strong> ${styleText}</p>
+                    <p><strong>⚙️ Class:</strong> ${classText}</p>
+                </div>
+            `,
+            icon: 'question',
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: `✅ I used the exact car (+${exactPoints})`,
+            denyButtonText: `🔄 I used a similar car (+${similarPoints})`,
+            cancelButtonText: '❌ Nah, pass (0)',
+            background: '#1e1e2f',
+            color: '#fff',
+            confirmButtonColor: '#28a745',
+            denyButtonColor: '#ffc107',
+            cancelButtonColor: '#dc3545'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              addPoints(exactPoints);
+              Swal.fire(`+${exactPoints} points!`, 'Great job!', 'success');
+            } else if (result.isDenied) {
+              addPoints(similarPoints);
+              Swal.fire(`+${similarPoints} points!`, 'Close enough! Keep pushing.', 'info');
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              Swal.fire('No points added', 'Maybe next time!', 'error');
+            }
+          });
         } else {
-            // Si no hay coches, mostrar error
-            Swal.fire({
-                title: '❌ Sin resultados',
-                text: 'No hay coches que cumplan los filtros seleccionados. Prueba con otros filtros.',
-                icon: 'error',
-                confirmButtonText: 'Vale'
-            });
+          // Si no hay coches, mostrar error
+          Swal.fire({
+            title: '❌ No Results',
+            text: 'No matching cars found for the selected filters. Try different filters.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
         }
+      }
+
+      spinAnimationActive = false;
+      spinButton.disabled = false;
     }
-    
-    spinAnimationActive = false;
-    spinButton.disabled = false;
-}
-    }
-    
-    setTimeout(updateSpin, intervals[0]);
+  }
+
+  setTimeout(updateSpin, intervals[0]);
 }
 
 // -------------------------------------------------------------
@@ -470,58 +502,109 @@ fetch('fh6_cars.json')
 // 8. FUNCIÓN PARA LIMPIAR FILTROS
 // -------------------------------------------------------------
 function clearAllFilters() {
-    selectedManufacturers.clear();
-    selectedCarsIds.clear();
-    selectedCountries.clear();
-    selectedDecades.clear();
-    selectedTypes.clear();
-    selectedClasses.clear();
-    fullRender();
-    resultCarSpan.innerText = '---';
-    resultCountrySpan.innerText = '---';
-    resultDecadeSpan.innerText = '---';
-    resultStyleSpan.innerText = '---';
-    resultClassSpan.innerText = '---';
+  selectedManufacturers.clear();
+  selectedCarsIds.clear();
+  selectedCountries.clear();
+  selectedDecades.clear();
+  selectedTypes.clear();
+  selectedClasses.clear();
+  fullRender();
+  resultCarSpan.innerText = '---';
+  resultCountrySpan.innerText = '---';
+  resultDecadeSpan.innerText = '---';
+  resultStyleSpan.innerText = '---';
+  resultClassSpan.innerText = '---';
 }
 
 const clearButton = document.getElementById('clearFiltersButton');
 if (clearButton) {
-    clearButton.addEventListener('click', clearAllFilters);
+  clearButton.addEventListener('click', clearAllFilters);
 }
 
 spinButton.addEventListener('click', startSpinSequence);
-
-
-
 
 // -------------------------------------------------------------
 // TEMA OSCURO / CLARO (JDM / Horizon Festival)
 // -------------------------------------------------------------
 const themeToggle = document.getElementById('themeToggleBtn');
 if (themeToggle) {
-    const currentTheme = localStorage.getItem('theme') || 'dark';
+  const currentTheme = localStorage.getItem('theme') || 'dark';
 
-    function setTheme(theme) {
-        if (theme === 'light') {
-            document.body.classList.add('light-mode');
-            themeToggle.textContent = '🌞 Horizon Mode';
-        } else {
-            document.body.classList.remove('light-mode');
-            themeToggle.textContent = '🌙 JDM Mode';
-        }
-        localStorage.setItem('theme', theme);
+  function setTheme(theme) {
+    if (theme === 'light') {
+      document.body.classList.add('light-mode');
+      themeToggle.textContent = '🌞 Horizon Mode';
+    } else {
+      document.body.classList.remove('light-mode');
+      themeToggle.textContent = '🌙 JDM Mode';
     }
+    localStorage.setItem('theme', theme);
+  }
 
-    themeToggle.addEventListener('click', () => {
-        const newTheme = document.body.classList.contains('light-mode') ? 'dark' : 'light';
-        setTheme(newTheme);
-    });
+  themeToggle.addEventListener('click', () => {
+    const newTheme = document.body.classList.contains('light-mode') ? 'dark' : 'light';
+    setTheme(newTheme);
+  });
 
-    setTheme(currentTheme);
+  setTheme(currentTheme);
 }
 
 // -------------------------------------------------------------
-// BOTÓN DE INSTRUCCIONES (SweetAlert2)
+// SISTEMA DE PUNTOS (HONOR)
+// -------------------------------------------------------------
+let honorPoints = 0;
+const pointsDisplay = document.getElementById('pointsDisplay');
+
+function loadPoints() {
+  const saved = localStorage.getItem('honorPoints');
+  honorPoints = saved ? parseInt(saved, 10) : 0;
+  updatePointsDisplay();
+}
+
+function updatePointsDisplay() {
+  if (pointsDisplay) pointsDisplay.innerText = honorPoints;
+}
+
+function addPoints(amount) {
+  honorPoints += amount;
+  localStorage.setItem('honorPoints', honorPoints);
+  updatePointsDisplay();
+}
+
+function resetPoints() {
+  honorPoints = 0;
+  localStorage.setItem('honorPoints', 0);
+  updatePointsDisplay();
+  Swal.fire({
+    title: 'Points Reset',
+    text: 'Your honor points have been reset to 0.',
+    icon: 'info',
+    confirmButtonText: 'OK',
+    background: '#1e1e2f',
+    color: '#fff',
+    confirmButtonColor: '#f97316'
+  });
+}
+
+// -------------------------------------------------------------
+// CARGA DEL ESTADO DEL MODO ESTRICTO DESDE LOCALSTORAGE
+// -------------------------------------------------------------
+if (strictModeToggle) {
+  const savedStrictMode = localStorage.getItem('strictModeEnabled');
+  if (savedStrictMode !== null) {
+    strictModeEnabled = savedStrictMode === 'true';
+    strictModeToggle.checked = strictModeEnabled;
+  }
+  strictModeToggle.addEventListener('change', (e) => {
+    strictModeEnabled = e.target.checked;
+    localStorage.setItem('strictModeEnabled', strictModeEnabled);
+  });
+}
+
+loadPoints();
+
+// -------------------------------------------------------------
+// BOTÓN DE INSTRUCCIONES (con reset points dentro)
 // -------------------------------------------------------------
 const instructionsBtn = document.getElementById('instructionsBtn');
 if (instructionsBtn) {
@@ -532,17 +615,66 @@ if (instructionsBtn) {
         <div style="text-align: left;">
           <p><strong>1. Filter your car pool</strong><br>Select manufacturers, models, countries, decades, car styles, or performance classes.</p>
           <p><strong>2. Spin the roulette</strong><br>Click <strong>Spin Roulette</strong> to get a random challenge based on your filters.</p>
-          <p><strong>3. Honor points system</strong><br>After completing a challenge, click <strong>+10 (exact car)</strong> or <strong>+5 (similar car)</strong> to add points. Points are saved in your browser.</p>
+          <p><strong>3. Honor points system</strong><br>After completing a challenge, click <strong>+10 (exact car)</strong> or <strong>+5 (similar car)</strong> to add points. Points are saved in your browser. <strong>Strict Mode</strong> gives +15/+10 points.</p>
           <p><strong>4. Clear filters</strong><br>Use <strong>Clear Filter</strong> to reset all selections.</p>
           <p><strong>5. Dark/Light mode</strong><br>Toggle between JDM dark mode and Horizon Festival light mode.</p>
           <p><em>All data comes from Forza Horizon 6. Enjoy creating your own challenges!</em></p>
+          <hr>
+          <button id="confirmResetBtn" style="background: #dc3545; border: none; border-radius: 40px; padding: 8px 16px; color: white; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;">⚠️ Reset Honor Points</button>
         </div>
       `,
       icon: 'info',
       confirmButtonText: 'Got it!',
       background: '#1e1e2f',
       color: '#fff',
-      confirmButtonColor: '#f97316'
+      confirmButtonColor: '#f97316',
+      didOpen: () => {
+        const resetBtn = document.getElementById('confirmResetBtn');
+        if (resetBtn) {
+          resetBtn.addEventListener('click', () => {
+            Swal.fire({
+              title: '⚠️ Are you sure?',
+              text: 'You will lose all your honor points!',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Yes, reset them!',
+              cancelButtonText: 'No, cancel',
+              confirmButtonColor: '#dc3545',
+              cancelButtonColor: '#28a745',
+              background: '#1e1e2f',
+              color: '#fff'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                Swal.fire({
+                  title: '🔁 Really really sure?',
+                  text: 'Your points will be set to 0. This cannot be undone.',
+                  icon: 'question',
+                  showCancelButton: true,
+                  confirmButtonText: 'Yes, erase everything!',
+                  cancelButtonText: 'No, keep them',
+                  confirmButtonColor: '#dc3545',
+                  cancelButtonColor: '#28a745',
+                  background: '#1e1e2f',
+                  color: '#fff'
+                }).then((finalResult) => {
+                  if (finalResult.isConfirmed) {
+                    resetPoints();
+                    Swal.fire({
+                      title: 'Points reset!',
+                      text: 'Your honor points are now 0.',
+                      icon: 'success',
+                      confirmButtonText: 'OK',
+                      background: '#1e1e2f',
+                      color: '#fff',
+                      confirmButtonColor: '#f97316'
+                    });
+                  }
+                });
+              }
+            });
+          });
+        }
+      }
     });
   });
 }

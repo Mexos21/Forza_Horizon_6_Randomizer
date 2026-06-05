@@ -26,6 +26,18 @@
     </div>
 
     <div class="dataset-status">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div class="points-bar" style="display: flex; align-items: center; gap: 12px;">
+          <span>🏆 <strong>Honor Points:</strong> <span id="pointsDisplay">0</span></span>
+        </div>
+        <div class="strict-mode-toggle" style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 13px;">🔒 Strict Mode</span>
+          <label class="switch">
+            <input type="checkbox" id="strictModeToggle">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
       <strong>📊 Dataset Status:</strong> <span id="datasetStatus">Loading cars...</span>
     </div>
 
