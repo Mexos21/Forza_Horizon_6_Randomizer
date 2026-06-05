@@ -1,130 +1,192 @@
 * {
   box-sizing: border-box;
 }
+
+/* ===== VARIABLES POR DEFECTO (MODO OSCURO JDM) ===== */
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #111118;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0c0;
+  --accent-1: #ff2a6d;   /* rosa neón JDM */
+  --accent-2: #00d4ff;   /* azul eléctrico */
+  --accent-3: #b400ff;   /* púrpura */
+  --border-color: #2a2a35;
+  --card-bg: #1a1a24;
+  --checkbox-bg: #222230;
+  --button-bg: #e53e3e;
+  --button-hover: #c53030;
+}
+
+/* ===== MODO CLARO HORIZON FESTIVAL (se activa con .light-mode en el body) ===== */
+body.light-mode {
+  --bg-primary: #f9f7f0;
+  --bg-secondary: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --accent-1: #ff7b00;   /* naranja Horizon */
+  --accent-2: #ffc300;   /* amarillo */
+  --accent-3: #ff006e;   /* rosa vibrante */
+  --border-color: #e0d6b0;
+  --card-bg: #fffcf5;
+  --checkbox-bg: #f0ede5;
+  --button-bg: #ff7b00;
+  --button-hover: #e56c00;
+}
+
 body {
   font-family: system-ui, 'Segoe UI', sans-serif;
-  background: #f4f4f9;
+  background: var(--bg-primary);
   margin: 0;
   padding: 20px;
-  color: #333;
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.2s;
+
 }
+
 .container {
   max-width: 850px;
   margin: 0 auto;
-  background: #f4f4f9;
+  background: var(--bg-primary);
   border-radius: 8px;
+  padding: 20px;
 }
+
 h2 {
   margin-top: 0;
 }
+
 .dataset-status {
-  background: #e2e8f0;
+  background: var(--bg-secondary);
   padding: 8px;
   border-radius: 4px;
   margin-bottom: 15px;
   font-size: 13px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
+
 .filters-panel {
-  background: #fff;
+  background: var(--card-bg);
   padding: 15px;
-  border-radius: 6px;
+  border-radius: 12px;
   margin-bottom: 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
 }
+
 .filters-panel h4 {
   margin-top: 0;
   margin-bottom: 15px;
-  color: #4a5568;
+  color: var(--accent-1);
 }
+
 .filters-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
   font-size: 13px;
 }
+
 .filter-group {
   display: flex;
   flex-direction: column;
 }
+
 .filter-group label {
   font-weight: bold;
   margin-bottom: 4px;
+  color: var(--text-secondary);
 }
+
 .checkbox-scroll {
   max-height: 100px;
   overflow-y: auto;
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--border-color);
   padding: 5px;
-  border-radius: 4px;
-  background: #fafafa;
+  border-radius: 8px;
+  background: var(--checkbox-bg);
 }
+
 .inline-scroll {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   max-height: 100px;
 }
+
 .inline-scroll label {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-weight: normal;
   white-space: nowrap;
+  background: var(--checkbox-bg);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
 }
+
 .full-width {
   grid-column: span 2;
 }
+
 button {
-  background: #e53e3e;
+  background: var(--button-bg);
   color: white;
   border: none;
   padding: 12px 24px;
   font-size: 16px;
   font-weight: bold;
-  border-radius: 4px;
+  border-radius: 40px;
   cursor: pointer;
   width: 100%;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, transform 0.1s;
 }
 button:hover {
-  background: #c53030;
+  background: var(--button-hover);
+  transform: scale(1.02);
 }
 button:disabled {
   background: #a0aec0;
   cursor: not-allowed;
+  transform: none;
 }
+
 .result-box {
   margin-top: 20px;
-  background: #fff;
+  background: var(--card-bg);
   padding: 15px;
-  border-radius: 4px;
-  border: 1px solid #cbd5e0;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
   min-height: 180px;
   position: relative;
+  color: var(--text-primary);
 }
 .result-box h3 {
   margin-top: 0;
+  color: var(--accent-2);
 }
 .result-box p {
   margin: 8px 0;
 }
+
 .loading-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  backdrop-filter: blur(2px);
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
 }
 .spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #e53e3e;
+  border: 4px solid var(--border-color);
+  border-top: 4px solid var(--accent-1);
   border-radius: 50%;
   width: 30px;
   height: 30px;
@@ -137,11 +199,19 @@ button:disabled {
 }
 .loading-overlay span {
   font-weight: bold;
-  color: #e53e3e;
+  color: var(--accent-1);
   letter-spacing: 1px;
   animation: pulse 0.3s infinite alternate;
 }
 @keyframes pulse {
   0% { opacity: 0.4; transform: scale(0.98); }
   100% { opacity: 1; transform: scale(1.02); }
+}
+
+/* Ajustes específicos para el botón de cambio de tema (si usas clases, pero ya tiene id) */
+#themeToggleBtn {
+  width: auto;
+  background: var(--accent-1);
+  padding: 6px 16px;
+  margin-left: 10px;
 }
