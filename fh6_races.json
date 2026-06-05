@@ -1,0 +1,139 @@
+{
+  "categories": [
+    {
+      "name": "Street Races",
+      "description": "City-circuit events run on sealed urban roads.",
+      "location": "Discover Japan",
+      "races": [
+        { "name": "Cedar Run Street Race", "distance_mi": 4.2, "laps": 1 },
+        { "name": "Daikoku Chase Street Race", "distance_mi": 4.2, "laps": 1 },
+        { "name": "Festival Chase Street Race", "distance_mi": 4.1, "laps": 1 },
+        { "name": "Hokubu Ascent Street Race", "distance_mi": 4.2, "laps": 1 },
+        { "name": "Kita Ine Street Race", "distance_mi": 4.1, "laps": 1 },
+        { "name": "Matsumi Climb Street Race", "distance_mi": 4.6, "laps": 1 },
+        { "name": "Minami Chase Street Race", "distance_mi": 4.6, "laps": 1 },
+        { "name": "Nachi Run Street Race", "distance_mi": 3.9, "laps": 1 },
+        { "name": "Norikura Descent Street Race", "distance_mi": 3.6, "laps": 1 },
+        { "name": "Okishinaimura Run Street Race", "distance_mi": 3.2, "laps": 1 },
+        { "name": "Rainbow Bridge Descent Street Race", "distance_mi": 5.3, "laps": 1 },
+        { "name": "River Descent Street Race", "distance_mi": 3.8, "laps": 1 },
+        { "name": "Shimanoyama Charge Street Race", "distance_mi": 5.2, "laps": 1 },
+        { "name": "Sunflower Charge Street Race", "distance_mi": 3.8, "laps": 1 },
+        { "name": "Tokyo City Docks Charge Street Race", "distance_mi": 4.0, "laps": 1 }
+      ]
+    },
+    {
+      "name": "Road Races",
+      "description": "Point-to-point and circuit races on open asphalt.",
+      "location": "Horizon Festival",
+      "races": [
+        { "name": "Coastline Sprint", "distance_mi": 5.0, "laps": 1 },
+        { "name": "Daikoku Circuit", "distance_mi": 3.3, "laps": 2 },
+        { "name": "Electric Town Circuit", "distance_mi": 5.5, "laps": 2 },
+        { "name": "Festival Sprint", "distance_mi": 4.9, "laps": 1 },
+        { "name": "Highway Circuit", "distance_mi": 8.7, "laps": 2 },
+        { "name": "Hokubu Circuit", "distance_mi": 4.7, "laps": 3 },
+        { "name": "Irokawa Circuit Road Race", "distance_mi": 3.5, "laps": 3 },
+        { "name": "Ito Sprint", "distance_mi": 5.8, "laps": 1 },
+        { "name": "Legend Island Circuit", "distance_mi": 8.8, "laps": 3 },
+        { "name": "Narai-Juku Circuit", "distance_mi": 4.4, "laps": 3 },
+        { "name": "Satta Sprint", "distance_mi": 5.1, "laps": 1 },
+        { "name": "Seaside Park Sprint", "distance_mi": 4.5, "laps": 1 },
+        { "name": "Shikisai Sprint", "distance_mi": 4.8, "laps": 1 },
+        { "name": "Shimanoyama Circuit", "distance_mi": 3.4, "laps": 5 },
+        { "name": "Shimanoyama Sprint", "distance_mi": 4.0, "laps": 1 },
+        { "name": "Shirakawa Circuit", "distance_mi": 4.0, "laps": 2 },
+        { "name": "Tateyama Kurobe Sprint", "distance_mi": 3.8, "laps": 1 },
+        { "name": "Venus Sprint", "distance_mi": 5.0, "laps": 1 }
+      ]
+    },
+    {
+      "name": "Touge Races",
+      "description": "Tight mountain-pass duels on winding routes.",
+      "location": "Discover Japan",
+      "races": [
+        { "name": "Arashiyama Takao Touge Race", "distance_mi": 3.0, "laps": 1 },
+        { "name": "Bandai Azuma Touge Race", "distance_mi": 2.9, "laps": 1 },
+        { "name": "Hakone Nanamagari Touge Race", "distance_mi": null, "laps": 1 },
+        { "name": "Mt. Haruna Touge Race", "distance_mi": 4.3, "laps": 1 },
+        { "name": "Norikura Skyline Touge Race", "distance_mi": 3.6, "laps": 1 }
+      ]
+    },
+    {
+      "name": "Drag Races",
+      "description": "Straight-line sprints down measured strips.",
+      "location": "Horizon Festival",
+      "races": [
+        { "name": "Horizon Festival Drag Strip", "distance_mi": 0.6, "laps": 1 },
+        { "name": "Irokawa Space Center Drag Strip", "distance_mi": 0.2, "laps": 1 },
+        { "name": "Ito Airfield Drag Strip", "distance_mi": 0.5, "laps": 1 }
+      ]
+    },
+    {
+      "name": "Dirt Races",
+      "description": "Mixed-surface dirt events blending tarmac and off-road sections.",
+      "location": "Horizon Festival",
+      "races": [
+        { "name": "Airfield Trail", "distance_mi": 4.2, "laps": 1 },
+        { "name": "Bamboo Forest Scramble", "distance_mi": 9.3, "laps": 3 },
+        { "name": "Cherry Field Trail", "distance_mi": 4.5, "laps": 1 },
+        { "name": "Chiheisen Scramble", "distance_mi": 4.9, "laps": 3 },
+        { "name": "Hirosaki Scramble", "distance_mi": 5.1, "laps": 3 },
+        { "name": "Hokubu Trail", "distance_mi": 3.6, "laps": 1 },
+        { "name": "Horizon Stadium Scramble", "distance_mi": 7.3, "laps": 3 },
+        { "name": "Ine Scramble", "distance_mi": 5.7, "laps": 3 },
+        { "name": "Ito Trail", "distance_mi": 4.4, "laps": 1 },
+        { "name": "Kawazu Nanadaru Scramble", "distance_mi": 7.8, "laps": 3 },
+        { "name": "Kinkaku-ji Trail", "distance_mi": 3.4, "laps": 1 },
+        { "name": "Legend Island Trail", "distance_mi": 3.3, "laps": 1 },
+        { "name": "Nukabira Trail", "distance_mi": 5.0, "laps": 1 },
+        { "name": "Oyashirazu Trail", "distance_mi": 3.2, "laps": 1 },
+        { "name": "Sekibe Scramble", "distance_mi": 4.0, "laps": 3 },
+        { "name": "Sotoyama Scramble", "distance_mi": 5.5, "laps": 3 },
+        { "name": "Sunflower Scramble", "distance_mi": 5.3, "laps": 3 },
+        { "name": "Taiyaki Scramble", "distance_mi": 6.7, "laps": 3 },
+        { "name": "Takashiro Trail", "distance_mi": 3.6, "laps": 1 },
+        { "name": "The Gauntlet", "distance_mi": 18.7, "laps": 1 }
+      ]
+    },
+    {
+      "name": "Cross Country Races",
+      "description": "Off-road events straight across open terrain.",
+      "location": "Horizon Festival",
+      "races": [
+        { "name": "City Docks Cross Country Circuit", "distance_mi": 4.7, "laps": 2 },
+        { "name": "Edogawa Cross Country Circuit", "distance_mi": 5.7, "laps": 2 },
+        { "name": "Izu Cross Country", "distance_mi": 4.8, "laps": 1 },
+        { "name": "Legend Island Cross Country Circuit", "distance_mi": 6.2, "laps": 2 },
+        { "name": "Nangan Cross Country Circuit", "distance_mi": 5.4, "laps": 3 },
+        { "name": "Naruo Cross Country Circuit", "distance_mi": 5.6, "laps": 3 },
+        { "name": "Oka Cross Country Circuit", "distance_mi": 7.2, "laps": 3 },
+        { "name": "Ruriko-ji Cross Country", "distance_mi": 4.1, "laps": 1 },
+        { "name": "Shimanoyama Cross Country", "distance_mi": 4.0, "laps": 1 },
+        { "name": "Shinjuku Gyoen Cross Country", "distance_mi": 3.7, "laps": 1 },
+        { "name": "Snow Forest Cross Country Circuit", "distance_mi": 6.6, "laps": 3 },
+        { "name": "Soni Highlands Cross Country", "distance_mi": 4.9, "laps": 1 },
+        { "name": "Takashiro Cross Country", "distance_mi": 5.5, "laps": 1 },
+        { "name": "Tateyama Alpine Cross Country", "distance_mi": 4.9, "laps": 1 },
+        { "name": "Temple Cross Country", "distance_mi": 4.4, "laps": 1 },
+        { "name": "The Titan", "distance_mi": 14.4, "laps": 1 },
+        { "name": "Wind Farm Cross Country", "distance_mi": 3.9, "laps": 1 },
+        { "name": "Yahikoyama Cross Country", "distance_mi": 3.9, "laps": 1 }
+      ]
+    },
+    {
+      "name": "Wristband Events",
+      "description": "Horizon Festival milestone events on the road to Legend status.",
+      "location": "Horizon Festival",
+      "races": [
+        { "name": "Flight Club", "distance_mi": 5.4, "laps": 1 },
+        { "name": "Horizon Invitational", "distance_mi": 4.8, "laps": 1 },
+        { "name": "Horizon Legend", "distance_mi": 7.2, "laps": 1 },
+        { "name": "Launch Control", "distance_mi": 5.0, "laps": 1 },
+        { "name": "Mech My Day", "distance_mi": 5.3, "laps": 1 },
+        { "name": "Off Piste", "distance_mi": 5.2, "laps": 1 },
+        { "name": "Pier Pressure", "distance_mi": 4.9, "laps": 1 }
+      ]
+    }
+  ]
+}
