@@ -519,3 +519,30 @@ if (themeToggle) {
 
     setTheme(currentTheme);
 }
+
+// -------------------------------------------------------------
+// BOTÓN DE INSTRUCCIONES (SweetAlert2)
+// -------------------------------------------------------------
+const instructionsBtn = document.getElementById('instructionsBtn');
+if (instructionsBtn) {
+  instructionsBtn.addEventListener('click', () => {
+    Swal.fire({
+      title: '📖 How to Use',
+      html: `
+        <div style="text-align: left;">
+          <p><strong>1. Filter your car pool</strong><br>Select manufacturers, models, countries, decades, car styles, or performance classes.</p>
+          <p><strong>2. Spin the roulette</strong><br>Click <strong>Spin Roulette</strong> to get a random challenge based on your filters.</p>
+          <p><strong>3. Honor points system</strong><br>After completing a challenge, click <strong>+10 (exact car)</strong> or <strong>+5 (similar car)</strong> to add points. Points are saved in your browser.</p>
+          <p><strong>4. Clear filters</strong><br>Use <strong>Clear Filter</strong> to reset all selections.</p>
+          <p><strong>5. Dark/Light mode</strong><br>Toggle between JDM dark mode and Horizon Festival light mode.</p>
+          <p><em>All data comes from Forza Horizon 6. Enjoy creating your own challenges!</em></p>
+        </div>
+      `,
+      icon: 'info',
+      confirmButtonText: 'Got it!',
+      background: '#1e1e2f',
+      color: '#fff',
+      confirmButtonColor: '#f97316'
+    });
+  });
+}
