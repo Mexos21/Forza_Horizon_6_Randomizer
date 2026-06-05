@@ -87,7 +87,7 @@ function getAvailableTypes() {
 }
 
 // -------------------------------------------------------------
-// 5. RENDERIZADO DE CHECKBOXES (con disabled en modo estricto)
+// 5. RENDERIZADO DE CHECKBOXES
 // -------------------------------------------------------------
 function renderManufacturers() {
   const manufacturers = getUniqueManufacturers();
@@ -226,7 +226,7 @@ function renderClasses() {
     cb.type = 'checkbox';
     cb.value = pClass;
     cb.checked = selectedClasses.has(pClass);
-    cb.disabled = false; // Siempre habilitadas
+    cb.disabled = false;
     cb.addEventListener('change', (e) => {
       if (e.target.checked) selectedClasses.add(pClass);
       else selectedClasses.delete(pClass);
@@ -316,7 +316,7 @@ function generateRandomChallenge() {
 }
 
 // -------------------------------------------------------------
-// HELPER: Obtener fabricante del texto del coche
+// HELPER: Obtener fabricante del texto del coche (resultado final)
 // -------------------------------------------------------------
 function getManufacturerFromCarText(carText) {
   if (carText.includes('Any Car')) return 'Any';
@@ -331,7 +331,7 @@ function getManufacturerFromCarText(carText) {
 }
 
 // -------------------------------------------------------------
-// RULETA DENTRO DE SWEETALERT2 (con botones desactivados y efecto "casi se queda")
+// RULETA DENTRO DE SWEETALERT2 (sin salto final, botones desactivados manualmente)
 // -------------------------------------------------------------
 let spinInProgress = false;
 
@@ -357,37 +357,59 @@ function startSpinSequence() {
     return { availableCars, availableCountries, availableDecades, availableStyles, availableClasses };
   }
 
+  // Generar fabricante aleatorio durante la animación (modo normal)
+  function randomManufacturer() {
+    // Si hay filtros de fabricantes, elegir uno de ellos
+    if (selectedManufacturers.size > 0) {
+      const makesArray = Array.from(selectedManufacturers);
+      return randomFrom(makesArray);
+    }
+    // Si no, elegir una marca real de toda la base de datos
+    const allMakes = getUniqueManufacturers();
+    if (allMakes.length === 0) return 'Any'; // fallback, pero no debería ocurrir
+    return randomFrom(allMakes);
+  }
+
   function updateModalContent() {
     const pools = getPools();
     let carText = '', countryText = '', decadeText = '', styleText = '', classText = '';
+    let manufacturerText = '';
 
     if (strictModeEnabled) {
       if (pools.availableCars.length) {
         const randomCar = randomFrom(pools.availableCars);
         carText = `${randomCar.make} ${randomCar.model}`;
-      } else carText = '???';
+        manufacturerText = randomCar.make;
+      } else {
+        carText = '???';
+        manufacturerText = '???';
+      }
       if (pools.availableCountries.length) countryText = randomFrom(pools.availableCountries);
       if (pools.availableDecades.length) decadeText = randomFrom(pools.availableDecades);
       if (pools.availableStyles.length) styleText = randomFrom(pools.availableStyles);
       if (pools.availableClasses.length) classText = randomFrom(pools.availableClasses);
     } else {
+      // Modo normal
       if (selectedManufacturers.size > 0) {
         const brandsText = Array.from(selectedManufacturers).join('/');
         carText = `Any ${brandsText}! 🏎️`;
       } else {
         carText = 'Any Car! 🏎️';
       }
+      manufacturerText = randomManufacturer();
       if (pools.availableCountries.length) countryText = randomFrom(pools.availableCountries);
       if (pools.availableDecades.length) decadeText = randomFrom(pools.availableDecades);
       if (pools.availableStyles.length) styleText = randomFrom(pools.availableStyles);
       if (pools.availableClasses.length) classText = randomFrom(pools.availableClasses);
     }
 
+    const manuSpan = document.getElementById('swalManufacturer');
     const carSpan = document.getElementById('swalCar');
     const countrySpan = document.getElementById('swalCountry');
     const decadeSpan = document.getElementById('swalDecade');
     const styleSpan = document.getElementById('swalStyle');
     const classSpan = document.getElementById('swalClass');
+    if (manuSpan) manuSpan.innerText = manufacturerText;
     if (carSpan) carSpan.innerText = carText;
     if (countrySpan) countrySpan.innerText = countryText;
     if (decadeSpan) decadeSpan.innerText = decadeText;
@@ -395,11 +417,12 @@ function startSpinSequence() {
     if (classSpan) classSpan.innerText = classText;
   }
 
-  // Abrir modal con botones desactivados
+  // Abrir modal con botones desactivados manualmente
   Swal.fire({
     title: '🎲 WHEELSPIN 🎲',
     html: `
       <div style="text-align: center;">
+        <p><strong>🏭 Manufacturer:</strong> <span id="swalManufacturer">🌀</span></p>
         <p><strong>🚗 Car:</strong> <span id="swalCar">🌀</span></p>
         <p><strong>🌍 Country:</strong> <span id="swalCountry">🌀</span></p>
         <p><strong>📅 Decade:</strong> <span id="swalDecade">🌀</span></p>
@@ -412,13 +435,17 @@ function startSpinSequence() {
     showCancelButton: true,
     confirmButtonText: strictModeEnabled ? '✅ I used the exact car (+15)' : '✅ I completed the challenge (+5)',
     cancelButtonText: '❌ Pass (0)',
-    confirmButtonDisabled: true,
-    cancelButtonDisabled: true,
     allowOutsideClick: false,
     background: '#1e1e2f',
     color: '#fff',
     confirmButtonColor: '#28a745',
-    cancelButtonColor: '#dc3545'
+    cancelButtonColor: '#dc3545',
+    didOpen: (modal) => {
+      const confirmBtn = modal.querySelector('.swal2-confirm');
+      const cancelBtn = modal.querySelector('.swal2-cancel');
+      if (confirmBtn) confirmBtn.disabled = true;
+      if (cancelBtn) cancelBtn.disabled = true;
+    }
   }).then((result) => {
     if (result.isConfirmed) {
       const exactPoints = strictModeEnabled ? 15 : 5;
@@ -445,42 +472,46 @@ function startSpinSequence() {
       step++;
       setTimeout(animate, intervals[step]);
     } else {
-      setTimeout(() => {
-        updateModalContent(); // último "falso" salto
-        setTimeout(() => {
-          const challenge = generateRandomChallenge();
-          if (!challenge) {
-            Swal.close();
-            Swal.fire({
-              title: '❌ No Results',
-              text: 'No matching cars found. Try different filters.',
-              icon: 'error',
-              confirmButtonText: 'OK'
-            }).then(() => {
-              spinInProgress = false;
-              spinButton.disabled = false;
-            });
-            return;
-          }
-          const { carText, countryText, decadeText, styleText, classText } = challenge;
-          const manufacturer = getManufacturerFromCarText(carText);
-          Swal.update({
-            title: strictModeEnabled ? '🎯 Strict Challenge!' : '🎉 Challenge Generated!',
-            html: `
-              <div style="text-align: center;">
-                <p><strong>🏭 Manufacturer:</strong> ${manufacturer}</p>
-                <p><strong>🚗 Car:</strong> ${carText}</p>
-                <p><strong>🌍 Country:</strong> ${countryText}</p>
-                <p><strong>📅 Decade:</strong> ${decadeText}</p>
-                <p><strong>🏎️ Style:</strong> ${styleText}</p>
-                <p><strong>⚙️ Class:</strong> ${classText}</p>
-              </div>
-            `,
-            confirmButtonDisabled: false,
-            cancelButtonDisabled: false
-          });
-        }, 150);
-      }, 200);
+      // Fin de la animación: obtener resultado real y actualizar modal
+      const challenge = generateRandomChallenge();
+      if (!challenge) {
+        Swal.close();
+        Swal.fire({
+          title: '❌ No Results',
+          text: 'No matching cars found. Try different filters.',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          spinInProgress = false;
+          spinButton.disabled = false;
+        });
+        return;
+      }
+      const { carText, countryText, decadeText, styleText, classText } = challenge;
+      const manufacturer = getManufacturerFromCarText(carText);
+      Swal.update({
+        title: strictModeEnabled ? '🎯 Strict Challenge!' : '🎉 Challenge Generated!',
+        html: `
+          <div style="text-align: center;">
+            <p><strong>🏭 Manufacturer:</strong> ${manufacturer}</p>
+            <p><strong>🚗 Car:</strong> ${carText}</p>
+            <p><strong>🌍 Country:</strong> ${countryText}</p>
+            <p><strong>📅 Decade:</strong> ${decadeText}</p>
+            <p><strong>🏎️ Style:</strong> ${styleText}</p>
+            <p><strong>⚙️ Class:</strong> ${classText}</p>
+          </div>
+        `,
+        confirmButtonDisabled: false,
+        cancelButtonDisabled: false
+      });
+      // Habilitar botones manualmente por si acaso
+      const modal = Swal.getPopup();
+      if (modal) {
+        const confirmBtn = modal.querySelector('.swal2-confirm');
+        const cancelBtn = modal.querySelector('.swal2-cancel');
+        if (confirmBtn) confirmBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = false;
+      }
     }
   }
 
@@ -616,7 +647,6 @@ function resetPoints() {
 // -------------------------------------------------------------
 function applyStrictModeUI() {
   if (strictModeEnabled) {
-    // Limpiar filtros al activar modo estricto
     selectedManufacturers.clear();
     selectedCarsIds.clear();
     selectedCountries.clear();
