@@ -395,7 +395,7 @@ function startSpinSequence() {
                     </div>
                 `,
                 icon: 'success',
-                confirmButtonText: '¡Aceptar el reto!',
+                confirmButtonText: 'Accept challenge!',
                 background: '#1e1e2f',
                 color: '#fff',
                 confirmButtonColor: '#f97316'
@@ -504,10 +504,10 @@ if (themeToggle) {
     function setTheme(theme) {
         if (theme === 'light') {
             document.body.classList.add('light-mode');
-            themeToggle.textContent = '🌞 Modo Horizon';
+            themeToggle.textContent = '🌞 Horizon Mode';
         } else {
             document.body.classList.remove('light-mode');
-            themeToggle.textContent = '🌙 Modo JDM';
+            themeToggle.textContent = '🌙 JDM Mode';
         }
         localStorage.setItem('theme', theme);
     }
