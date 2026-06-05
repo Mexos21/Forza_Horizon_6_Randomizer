@@ -247,7 +247,7 @@ function fullRender() {
 }
 
 // -------------------------------------------------------------
-// 6. LÓGICA DE GENERACIÓN DEL DESAFÍO
+// 6. LÓGICA DE GENERACIÓN DEL DESAFÍO (versión mejorada)
 // -------------------------------------------------------------
 function generateRandomChallenge() {
   let pool = [...carsDatabase];
@@ -269,6 +269,7 @@ function generateRandomChallenge() {
   const realCountry = pickedCar.country;
   const realDecade = getCarDecade(pickedCar.year);
   const realType = pickedCar.type || 'Unknown';
+  const realMake = pickedCar.make;   // ← NUEVO: guardamos la marca real
 
   let chosenClass = '';
   if (selectedClasses.size > 0) {
@@ -312,26 +313,48 @@ function generateRandomChallenge() {
   const styleText = showType ? realType : 'Any Style 🏷️';
   const classText = chosenClass;
 
-  return { carText, countryText, decadeText, styleText, classText };
+  // Devolvemos toda la información necesaria para mostrar el fabricante correctamente
+  return {
+    carText,
+    countryText,
+    decadeText,
+    styleText,
+    classText,
+    realMake,
+    showCarModel,
+    showCountry,
+    showDecade,
+    showType
+  };
 }
 
 // -------------------------------------------------------------
-// HELPER: Obtener fabricante del texto del coche (resultado final)
+// HELPER: Obtener fabricante a mostrar en el resultado final
 // -------------------------------------------------------------
-function getManufacturerFromCarText(carText) {
+function getManufacturerFromChallenge(challenge) {
+  const { carText, realMake, showCarModel, showCountry, showDecade, showType } = challenge;
+
+  // Si se muestra el coche concreto (modo estricto o porque el azar lo decidió), la marca es la real
+  if (showCarModel) return realMake;
+
+  // Modo normal: el coche no se muestra ("Any Car" o "Any [marcas]")
+  // Decidir si mostrar la marca real o "Any" con una probabilidad del 30%
+  if (!strictModeEnabled && Math.random() < 0.3) {
+    return realMake;  // muestra la marca del coche elegido internamente
+  }
+
+  // Si no, extraer del texto del coche (puede ser "Any" o "BMW/Audi")
   if (carText.includes('Any Car')) return 'Any';
   if (carText.includes('Any ') && !carText.includes('Any Car')) {
     const match = carText.match(/Any (.+?)!/);
     if (match) return match[1];
     return 'Any';
   }
-  const firstSpace = carText.indexOf(' ');
-  if (firstSpace > 0) return carText.substring(0, firstSpace);
-  return carText;
+  return 'Any';
 }
 
 // -------------------------------------------------------------
-// RULETA DENTRO DE SWEETALERT2 (sin salto final, botones desactivados manualmente)
+// RULETA DENTRO DE SWEETALERT2 (con las mejoras)
 // -------------------------------------------------------------
 let spinInProgress = false;
 
@@ -359,15 +382,14 @@ function startSpinSequence() {
 
   // Generar fabricante aleatorio durante la animación (modo normal)
   function randomManufacturer() {
-    // Si hay filtros de fabricantes, elegir uno de ellos
-    if (selectedManufacturers.size > 0) {
-      const makesArray = Array.from(selectedManufacturers);
-      return randomFrom(makesArray);
-    }
-    // Si no, elegir una marca real de toda la base de datos
     const allMakes = getUniqueManufacturers();
-    if (allMakes.length === 0) return 'Any'; // fallback, pero no debería ocurrir
-    return randomFrom(allMakes);
+    if (allMakes.length === 0) return 'Unknown';
+    // 90% probabilidad de mostrar una marca real, 10% "Any"
+    if (Math.random() < 0.9) {
+      return randomFrom(allMakes);
+    } else {
+      return 'Any';
+    }
   }
 
   function updateModalContent() {
@@ -389,7 +411,7 @@ function startSpinSequence() {
       if (pools.availableStyles.length) styleText = randomFrom(pools.availableStyles);
       if (pools.availableClasses.length) classText = randomFrom(pools.availableClasses);
     } else {
-      // Modo normal
+      // Modo normal: coche = "Any ..."
       if (selectedManufacturers.size > 0) {
         const brandsText = Array.from(selectedManufacturers).join('/');
         carText = `Any ${brandsText}! 🏎️`;
@@ -417,7 +439,6 @@ function startSpinSequence() {
     if (classSpan) classSpan.innerText = classText;
   }
 
-  // Abrir modal con botones desactivados manualmente
   Swal.fire({
     title: '🎲 WHEELSPIN 🎲',
     html: `
@@ -472,7 +493,7 @@ function startSpinSequence() {
       step++;
       setTimeout(animate, intervals[step]);
     } else {
-      // Fin de la animación: obtener resultado real y actualizar modal
+      // Terminar animación y mostrar resultado real
       const challenge = generateRandomChallenge();
       if (!challenge) {
         Swal.close();
@@ -488,7 +509,7 @@ function startSpinSequence() {
         return;
       }
       const { carText, countryText, decadeText, styleText, classText } = challenge;
-      const manufacturer = getManufacturerFromCarText(carText);
+      const manufacturer = getManufacturerFromChallenge(challenge); // ← USO DE NUEVA FUNCIÓN
       Swal.update({
         title: strictModeEnabled ? '🎯 Strict Challenge!' : '🎉 Challenge Generated!',
         html: `
@@ -504,7 +525,6 @@ function startSpinSequence() {
         confirmButtonDisabled: false,
         cancelButtonDisabled: false
       });
-      // Habilitar botones manualmente por si acaso
       const modal = Swal.getPopup();
       if (modal) {
         const confirmBtn = modal.querySelector('.swal2-confirm');
@@ -512,6 +532,8 @@ function startSpinSequence() {
         if (confirmBtn) confirmBtn.disabled = false;
         if (cancelBtn) cancelBtn.disabled = false;
       }
+      spinInProgress = false;
+      spinButton.disabled = false;
     }
   }
 
@@ -519,7 +541,7 @@ function startSpinSequence() {
 }
 
 // -------------------------------------------------------------
-// 7. CARGA DE LOS DOS JSON
+// 7. CARGA DE LOS DOS JSON Y HABILITACIÓN DEL BOTÓN
 // -------------------------------------------------------------
 let brandsLoaded = false;
 let carsLoaded = false;
@@ -531,7 +553,7 @@ function checkAllDataLoaded() {
     });
     datasetStatusSpan.innerText = `${carsDatabase.length} cars loaded.`;
     fullRender();
-    // Inicialmente limpiamos todos los filtros
+    // Limpiar selecciones iniciales
     selectedManufacturers.clear();
     selectedCarsIds.clear();
     selectedCountries.clear();
@@ -539,8 +561,11 @@ function checkAllDataLoaded() {
     selectedTypes.clear();
     selectedClasses.clear();
     fullRender();
+    spinButton.disabled = false;
   }
 }
+
+spinButton.disabled = true;
 
 fetch('fh6_brands_countries.json')
   .then(response => response.json())
@@ -552,6 +577,7 @@ fetch('fh6_brands_countries.json')
   .catch(error => {
     console.error('Error loading brands-countries.json:', error);
     datasetStatusSpan.innerText = '❌ Failed to load brand data.';
+    spinButton.disabled = false;
   });
 
 fetch('fh6_cars.json')
@@ -564,6 +590,7 @@ fetch('fh6_cars.json')
   .catch(error => {
     console.error('Error loading cars.json:', error);
     datasetStatusSpan.innerText = '❌ Failed to load car data.';
+    spinButton.disabled = false;
   });
 
 // -------------------------------------------------------------
