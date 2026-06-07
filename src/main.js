@@ -23,6 +23,7 @@ import { initTheme } from './theme.js';
 import { initInstructions } from './instructions.js';
 import { exportFiltersToCode, importFiltersFromCode } from './exportFilters.js';
 import { saveCurrentFilters, showSavedFiltersList, initSavedFilters } from './savedFilters.js';
+import { initSearchFilters } from './searchFilters.js'; // <-- Importar buscador
 
 // --- Referencias DOM ---
 const dom = {
@@ -55,7 +56,18 @@ const fullRender = () => {
     renderTypes(dom.types);
     renderClasses(dom.classes);
     saveFilterState(); // guarda estado después de cada cambio
+    // Reaplicar filtros de búsqueda tras el render
+    reapplySearchFilters();
 };
+
+// Función para reaplicar los filtros de búsqueda actuales
+function reapplySearchFilters() {
+    const searchInputs = document.querySelectorAll('.filter-search-input');
+    searchInputs.forEach(input => {
+        // Disparamos el evento 'input' para que se filtre con el texto actual
+        input.dispatchEvent(new Event('input'));
+    });
+}
 
 const clearAllFilters = () => {
     if (strictModeEnabled) return;
@@ -80,6 +92,7 @@ setPointsDisplay(dom.points);
 initTheme(dom.themeToggle);
 initInstructions(dom.instructions);
 initSavedFilters(fullRender);
+initSearchFilters(); // Inicializar los buscadores (solo una vez)
 
 // --- Eventos ---
 if (dom.clear) dom.clear.addEventListener('click', clearAllFilters);
