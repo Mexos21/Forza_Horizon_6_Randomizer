@@ -4,7 +4,8 @@ import {
     selectedCountries, selectedDecades,
     selectedTypes, selectedClasses,
     PERFORMANCE_CLASSES, DECADES_LIST,
-    getCarDecade, strictModeEnabled
+    getCarDecade, strictModeEnabled,
+    saveFilterState               // ← Importamos la función para guardar
 } from './data.js';
 
 export function getUniqueManufacturers() {
@@ -74,6 +75,7 @@ export function renderManufacturers(container, onUpdateCallback) {
             selectedDecades.clear();
             selectedTypes.clear();
             if (onUpdateCallback) onUpdateCallback();
+            saveFilterState();   // Guardar después del cambio
         });
         label.appendChild(cb);
         label.appendChild(document.createTextNode(` ${brand}`));
@@ -104,6 +106,7 @@ export function renderModels(container, onUpdateCallback) {
             selectedDecades.clear();
             selectedTypes.clear();
             if (onUpdateCallback) onUpdateCallback();
+            saveFilterState();   // Guardar después del cambio
         });
         label.appendChild(cb);
         label.appendChild(document.createTextNode(` ${car.make} ${car.model} - ${car.year}`));
@@ -126,6 +129,7 @@ export function renderCountries(container) {
         cb.addEventListener('change', (e) => {
             if (e.target.checked) selectedCountries.add(country);
             else selectedCountries.delete(country);
+            saveFilterState();   // Guardar después del cambio
         });
         label.appendChild(cb);
         label.appendChild(document.createTextNode(` ${country}`));
@@ -148,6 +152,7 @@ export function renderDecades(container) {
         cb.addEventListener('change', (e) => {
             if (e.target.checked) selectedDecades.add(decade);
             else selectedDecades.delete(decade);
+            saveFilterState();   // Guardar después del cambio
         });
         label.appendChild(cb);
         label.appendChild(document.createTextNode(` ${decade}`));
@@ -174,6 +179,7 @@ export function renderTypes(container) {
         cb.addEventListener('change', (e) => {
             if (e.target.checked) selectedTypes.add(type);
             else selectedTypes.delete(type);
+            saveFilterState();   // Guardar después del cambio
         });
         label.appendChild(cb);
         label.appendChild(document.createTextNode(` ${type}`));
@@ -195,6 +201,7 @@ export function renderClasses(container) {
         cb.addEventListener('change', (e) => {
             if (e.target.checked) selectedClasses.add(pClass);
             else selectedClasses.delete(pClass);
+            saveFilterState();   // Guardar después del cambio
         });
         label.appendChild(cb);
         label.appendChild(document.createTextNode(` ${pClass}`));

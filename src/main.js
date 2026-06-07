@@ -1,5 +1,5 @@
 // -------------------------------------------------------------
-// ARCHIVO PRINCIPAL: INICIALIZACIÓN, EVENTOS, FETCH Y RENDERIZADO GLOBAL
+// ARCHIVO PRINCIPAL OPTIMIZADO Y CORREGIDO
 // -------------------------------------------------------------
 
 import {
@@ -8,47 +8,56 @@ import {
     selectedCountries, selectedDecades,
     selectedTypes, selectedClasses,
     strictModeEnabled, setStrictMode,
-    loadIdMaps
+    loadIdMaps,
+    saveFilterState,
+    loadFilterState,
+    setInitializing
 } from './data.js';
-
 import {
     renderManufacturers, renderModels, renderCountries,
     renderDecades, renderTypes, renderClasses,
 } from './filters.js';
-
 import { setPointsDisplay } from './points.js';
 import { startSpinSequence } from './wheelspin.js';
 import { initTheme } from './theme.js';
 import { initInstructions } from './instructions.js';
 import { exportFiltersToCode, importFiltersFromCode } from './exportFilters.js';
+import { saveCurrentFilters, showSavedFiltersList, initSavedFilters } from './savedFilters.js';
 
-// Referencias DOM
-const datasetStatusSpan = document.getElementById('datasetStatus');
-const manufacturersDiv = document.getElementById('manufacturersList');
-const modelsDiv = document.getElementById('modelsList');
-const countriesDiv = document.getElementById('countriesList');
-const decadesDiv = document.getElementById('decadesList');
-const typesDiv = document.getElementById('typesList');
-const classesDiv = document.getElementById('classesList');
-const spinButton = document.getElementById('spinButton');
-const clearButton = document.getElementById('clearFiltersButton');
-const themeToggleBtn = document.getElementById('themeToggleBtn');
-const instructionsBtn = document.getElementById('instructionsBtn');
-const pointsDisplaySpan = document.getElementById('pointsDisplay');
-const strictModeToggle = document.getElementById('strictModeToggle');
+// --- Referencias DOM ---
+const dom = {
+    datasetStatus: document.getElementById('datasetStatus'),
+    manufacturers: document.getElementById('manufacturersList'),
+    models: document.getElementById('modelsList'),
+    countries: document.getElementById('countriesList'),
+    decades: document.getElementById('decadesList'),
+    types: document.getElementById('typesList'),
+    classes: document.getElementById('classesList'),
+    spin: document.getElementById('spinButton'),
+    clear: document.getElementById('clearFiltersButton'),
+    themeToggle: document.getElementById('themeToggleBtn'),
+    instructions: document.getElementById('instructionsBtn'),
+    points: document.getElementById('pointsDisplay'),
+    strictToggle: document.getElementById('strictModeToggle'),
+    saveFilters: document.getElementById('saveFiltersBtn'),
+    viewSaved: document.getElementById('viewSavedFiltersBtn'),
+    exportCode: document.getElementById('exportCodeBtn'),
+    importInput: document.getElementById('importCodeInput'),
+    importBtn: document.getElementById('importCodeBtn')
+};
 
-// Función de renderizado completo
-function fullRender() {
-    renderManufacturers(manufacturersDiv, fullRender);
-    renderModels(modelsDiv, fullRender);
-    renderCountries(countriesDiv);
-    renderDecades(decadesDiv);
-    renderTypes(typesDiv);
-    renderClasses(classesDiv);
-}
+// --- Funciones auxiliares ---
+const fullRender = () => {
+    renderManufacturers(dom.manufacturers, fullRender);
+    renderModels(dom.models, fullRender);
+    renderCountries(dom.countries);
+    renderDecades(dom.decades);
+    renderTypes(dom.types);
+    renderClasses(dom.classes);
+    saveFilterState(); // guarda estado después de cada cambio
+};
 
-// Limpiar filtros
-function clearAllFilters() {
+const clearAllFilters = () => {
     if (strictModeEnabled) return;
     selectedManufacturers.clear();
     selectedCarsIds.clear();
@@ -57,26 +66,36 @@ function clearAllFilters() {
     selectedTypes.clear();
     selectedClasses.clear();
     fullRender();
-}
+};
 
-// Inicializar puntos
-setPointsDisplay(pointsDisplaySpan);
+const resetResultDisplay = () => {
+    ['resultCar', 'resultCountry', 'resultDecade', 'resultStyle', 'resultClass'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = '---';
+    });
+};
 
-// Eventos
-if (clearButton) clearButton.addEventListener('click', clearAllFilters);
-spinButton.addEventListener('click', () => startSpinSequence(spinButton));
-initTheme(themeToggleBtn);
-initInstructions(instructionsBtn);
+// --- Inicializaciones ---
+setPointsDisplay(dom.points);
+initTheme(dom.themeToggle);
+initInstructions(dom.instructions);
+initSavedFilters(fullRender);
+
+// --- Eventos ---
+if (dom.clear) dom.clear.addEventListener('click', clearAllFilters);
+if (dom.spin) dom.spin.addEventListener('click', () => startSpinSequence(dom.spin));
+if (dom.saveFilters) dom.saveFilters.addEventListener('click', saveCurrentFilters);
+if (dom.viewSaved) dom.viewSaved.addEventListener('click', showSavedFiltersList);
 
 // Modo estricto
-if (strictModeToggle) {
-    const savedStrictMode = localStorage.getItem('strictModeEnabled');
-    if (savedStrictMode !== null) {
-        setStrictMode(savedStrictMode === 'true');
-        strictModeToggle.checked = strictModeEnabled;
+if (dom.strictToggle) {
+    const saved = localStorage.getItem('strictModeEnabled');
+    if (saved !== null) {
+        setStrictMode(saved === 'true');
+        dom.strictToggle.checked = strictModeEnabled;
         fullRender();
     }
-    strictModeToggle.addEventListener('change', (e) => {
+    dom.strictToggle.addEventListener('change', (e) => {
         setStrictMode(e.target.checked);
         localStorage.setItem('strictModeEnabled', e.target.checked);
         if (strictModeEnabled) {
@@ -87,100 +106,65 @@ if (strictModeToggle) {
             selectedTypes.clear();
         }
         fullRender();
-        // Reiniciar resultados visuales
-        const ids = ['resultCar', 'resultCountry', 'resultDecade', 'resultStyle', 'resultClass'];
-        ids.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerText = '---';
-        });
+        resetResultDisplay();
     });
 }
 
-// ------------------- CARGA DE DATOS JSON -------------------
-let brandsLoaded = false;
-let carsLoaded = false;
-let idsLoaded = false;
+// --- Carga de datos ---
+let brandsLoaded = false, carsLoaded = false, idsLoaded = false;
 
-function checkAllDataLoaded() {
+const checkAllDataLoaded = () => {
     if (brandsLoaded && carsLoaded && idsLoaded) {
-        carsDatabase.forEach(car => {
-            car.country = brandsCountries[car.make] || 'Unknown';
-        });
-        datasetStatusSpan.innerText = `${carsDatabase.length} cars loaded.`;
-        fullRender();
-        selectedManufacturers.clear();
-        selectedCarsIds.clear();
-        selectedCountries.clear();
-        selectedDecades.clear();
-        selectedTypes.clear();
-        selectedClasses.clear();
-        fullRender();
-        spinButton.disabled = false;
-
-        // Habilitar controles de import/export después de cargar mapas
-        const exportBtn = document.getElementById('exportCodeBtn');
-        const importInput = document.getElementById('importCodeInput');
-        const importBtn = document.getElementById('importCodeBtn');
-        if (exportBtn) exportBtn.disabled = false;
-        if (importBtn) importBtn.disabled = false;
-        if (importInput) importInput.disabled = false;
+        carsDatabase.forEach(car => { car.country = brandsCountries[car.make] || 'Unknown'; });
+        dom.datasetStatus.innerText = `${carsDatabase.length} cars loaded.`;
+        setInitializing(true);   // evitar guardar durante restauración
+        loadFilterState();          // restaura filtros guardados (si existen)
+        fullRender();               // renderiza los checkboxes
+        setInitializing(false);  // permitir guardar a partir de ahora
+        dom.spin.disabled = false;  // habilita botón de ruleta
+        // Habilitar controles de export/import
+        if (dom.exportCode) dom.exportCode.disabled = false;
+        if (dom.importBtn) dom.importBtn.disabled = false;
+        if (dom.importInput) dom.importInput.disabled = false;
     }
-}
+};
 
-spinButton.disabled = true;
+const loadJSON = async (url, handler) => {
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        handler(data);
+    } catch (error) {
+        console.error(`Error loading ${url}:`, error);
+        dom.datasetStatus.innerText = `❌ Failed to load ${url.split('/').pop()}.`;
+        if (url.includes('cars')) dom.spin.disabled = false;
+    }
+};
 
-fetch('data/fh6_brands_countries.json')
-    .then(response => response.json())
-    .then(data => {
-        Object.assign(brandsCountries, data);
-        brandsLoaded = true;
-        checkAllDataLoaded();
-    })
-    .catch(error => {
-        console.error('Error loading brands-countries.json:', error);
-        datasetStatusSpan.innerText = '❌ Failed to load brand data.';
-        spinButton.disabled = false;
-    });
+dom.spin.disabled = true;
+if (dom.exportCode) dom.exportCode.disabled = true;
+if (dom.importBtn) dom.importBtn.disabled = true;
+if (dom.importInput) dom.importInput.disabled = true;
 
-fetch('data/fh6_cars.json')
-    .then(response => response.json())
-    .then(data => {
-        carsDatabase.push(...data);
-        carsLoaded = true;
-        checkAllDataLoaded();
-    })
-    .catch(error => {
-        console.error('Error loading cars.json:', error);
-        datasetStatusSpan.innerText = '❌ Failed to load car data.';
-        spinButton.disabled = false;
-    });
+loadJSON('data/fh6_brands_countries.json', data => {
+    Object.assign(brandsCountries, data);
+    brandsLoaded = true;
+    checkAllDataLoaded();
+});
+loadJSON('data/fh6_cars.json', data => {
+    carsDatabase.push(...data);
+    carsLoaded = true;
+    checkAllDataLoaded();
+});
+loadJSON('data/ids.json', data => {
+    loadIdMaps(data);
+    idsLoaded = true;
+    checkAllDataLoaded();
+});
 
-// Cargar ids.json (mapas de IDs para exportar/importar)
-fetch('data/ids.json')
-    .then(response => response.json())
-    .then(data => {
-        loadIdMaps(data);
-        idsLoaded = true;
-        checkAllDataLoaded();
-    })
-    .catch(error => {
-        console.error('Error loading ids.json:', error);
-        idsLoaded = true; // para no bloquear, pero mostrar advertencia
-        checkAllDataLoaded();
-    });
-
-// ------------------- EXPORTAR / IMPORTAR FILTROS -------------------
-const exportBtn = document.getElementById('exportCodeBtn');
-const importInput = document.getElementById('importCodeInput');
-const importBtn = document.getElementById('importCodeBtn');
-
-// Inicialmente deshabilitados hasta que los mapas estén listos
-if (exportBtn) exportBtn.disabled = true;
-if (importBtn) importBtn.disabled = true;
-if (importInput) importInput.disabled = true;
-
-if (exportBtn) {
-    exportBtn.addEventListener('click', () => {
+// --- Exportar / Importar filtros ---
+if (dom.exportCode) {
+    dom.exportCode.addEventListener('click', () => {
         const code = exportFiltersToCode();
         navigator.clipboard.writeText(code);
         Swal.fire({
@@ -195,45 +179,21 @@ if (exportBtn) {
     });
 }
 
-if (importBtn && importInput) {
-    importBtn.addEventListener('click', () => {
-        const code = importInput.value.trim();
-        if (code) {
-            try {
-                importFiltersFromCode(code);
-                fullRender(); // forzar actualización de checkboxes
-                importInput.value = '';
-                Swal.fire({
-                    title: 'Filters Imported!',
-                    text: 'Your filters have been restored.',
-                    icon: 'success',
-                    confirmButtonText: 'OK',
-                    background: '#1e1e2f',
-                    color: '#fff',
-                    confirmButtonColor: '#28a745'
-                });
-            } catch (error) {
-                console.error('Import error:', error);
-                Swal.fire({
-                    title: 'Invalid Code',
-                    text: 'The code could not be parsed. Please check it and try again.',
-                    icon: 'error',
-                    confirmButtonText: 'OK',
-                    background: '#1e1e2f',
-                    color: '#fff',
-                    confirmButtonColor: '#dc3545'
-                });
-            }
-        } else {
-            Swal.fire({
-                title: 'No code',
-                text: 'Please paste a valid filter code.',
-                icon: 'warning',
-                confirmButtonText: 'OK',
-                background: '#1e1e2f',
-                color: '#fff',
-                confirmButtonColor: '#f97316'
-            });
+if (dom.importBtn && dom.importInput) {
+    dom.importBtn.addEventListener('click', async () => {
+        const code = dom.importInput.value.trim();
+        if (!code) {
+            Swal.fire({ title: 'No code', text: 'Please paste a valid filter code.', icon: 'warning', confirmButtonText: 'OK' });
+            return;
+        }
+        try {
+            importFiltersFromCode(code);
+            fullRender();   // actualiza los checkboxes
+            dom.importInput.value = '';
+            Swal.fire({ title: 'Filters Imported!', text: 'Your filters have been restored.', icon: 'success', confirmButtonText: 'OK' });
+        } catch (error) {
+            console.error('Import error:', error);
+            Swal.fire({ title: 'Invalid Code', text: 'The code could not be parsed.', icon: 'error', confirmButtonText: 'OK' });
         }
     });
 }

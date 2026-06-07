@@ -6,6 +6,10 @@
 export let carsDatabase = [];
 export let brandsCountries = {};
 
+// Variables para guardar filtros en localStorage
+let isInitializing = true;
+export function setInitializing(value) { isInitializing = value; }
+
 // Constantes
 export const PERFORMANCE_CLASSES = ['D 500', 'C 600', 'B 700', 'A 800', 'S1 900', 'S2 998', 'X 999'];
 export const DECADES_LIST = ['1930s', '1940s', '1950s', '1960s', '1970s', '1980s', '1990s', '2000s', '2010s', '2020s'];
@@ -50,4 +54,56 @@ export function loadIdMaps(data) {
     Object.entries(countryById).forEach(([id, name]) => { countryToId[name] = id; });
     styleToId = {};
     Object.entries(styleById).forEach(([id, name]) => { styleToId[name] = id; });
+}
+
+// -------------------------------------------------------------
+// GUARDAR Y CARGAR EL ESTADO DE FILTROS (localStorage)
+// -------------------------------------------------------------
+export function saveFilterState() {
+    if (isInitializing) return;
+
+    const state = {
+        manufacturers: Array.from(selectedManufacturers),
+        carsIds: Array.from(selectedCarsIds),
+        countries: Array.from(selectedCountries),
+        decades: Array.from(selectedDecades),
+        types: Array.from(selectedTypes),
+        classes: Array.from(selectedClasses),
+        strictMode: strictModeEnabled
+    };
+    localStorage.setItem('fh6_filters', JSON.stringify(state));
+}
+
+export function loadFilterState() {
+    const saved = localStorage.getItem('fh6_filters');
+    if (!saved) return;
+    try {
+        const state = JSON.parse(saved);
+        // Limpiar y restaurar cada Set
+        selectedManufacturers.clear();
+        state.manufacturers?.forEach(m => selectedManufacturers.add(m));
+        
+        selectedCarsIds.clear();
+        state.carsIds?.forEach(id => selectedCarsIds.add(id));
+        
+        selectedCountries.clear();
+        state.countries?.forEach(c => selectedCountries.add(c));
+        
+        selectedDecades.clear();
+        state.decades?.forEach(d => selectedDecades.add(d));
+        
+        selectedTypes.clear();
+        state.types?.forEach(t => selectedTypes.add(t));
+        
+        selectedClasses.clear();
+        state.classes?.forEach(c => selectedClasses.add(c));
+        
+        if (typeof state.strictMode === 'boolean') {
+            setStrictMode(state.strictMode);
+            const toggle = document.getElementById('strictModeToggle');
+            if (toggle) toggle.checked = strictModeEnabled;
+        }
+    } catch(e) {
+        console.error('Error loading filter state:', e);
+    }
 }

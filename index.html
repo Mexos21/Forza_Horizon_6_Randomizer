@@ -44,7 +44,13 @@
     </div>
 
     <div class="filters-panel">
-      <h4>⚙️ Target Filter Pool (Select Multiple options)</h4>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <h4 style="margin: 0;">⚙️ Target Filter Pool (Select Multiple options)</h4>
+        <div style="display: flex; gap: 8px;">
+          <button id="saveFiltersBtn" style="background: #4a5568; padding: 4px 12px; font-size: 13px;">💾 </button>
+          <button id="viewSavedFiltersBtn" style="background: #4a5568; padding: 4px 12px; font-size: 13px;">📂</button>
+        </div>
+      </div>
       <div class="filters-grid">
         <!-- Manufacturers -->
         <div class="filter-group">
